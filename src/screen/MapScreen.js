@@ -60,7 +60,7 @@ class MapScreen extends BaseScreen {
 
         TemplateNetwork.fetchGetTestPoints(region).then(
             res => {
-                alert(res.data.length)
+                alert(`Broj tacaka:${res.data.length}`)
                 this.setNewStateHandler({
                     points: res.data
                 })
@@ -73,7 +73,7 @@ class MapScreen extends BaseScreen {
     onPressLongMap = (e) => {
         const { region } = this.state
         const zoom = getZoomRegion(region)
-        if (zoom >= 14) {
+        if (zoom >= 9) {
             // alert(zoom)
             // alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
             TemplateNetwork.fetchPostTestPoints(e.nativeEvent.coordinate).then(
@@ -84,7 +84,7 @@ class MapScreen extends BaseScreen {
                     this.showAlertMessage(err)
                 }
             )
-        }else {
+        } else {
             this.showAlertMessage(`Molimo va da zumirate mapu radi tacnije lokacije, zoom: ${zoom}`)
         }
     }
@@ -111,20 +111,22 @@ class MapScreen extends BaseScreen {
                     onLongPress={e => this.onPressLongMap(e)}
                     onRegionChangeComplete={this.onRegionChange}
                     onTouchStart={Keyboard.dismiss}>
-                    <Heatmap
-                        points={this.state.points}
-                        opacity={1}
-                        radius={isAndroid ? 20 : 50}
-                        gradient={{
-                            colorMapSize: 256,
-                            colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
-                            startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
-                        }}
-                    >
-                    </Heatmap>
+                    {this.state.points.length > 0 ?
+                        < Heatmap
+                            points={this.state.points}
+                            opacity={1}
+                            radius={isAndroid ? 20 : 50}
+                            gradient={{
+                                colorMapSize: 256,
+                                colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
+                                startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
+                            }}
+                        >
+                        </Heatmap>
+                        : null}
                 </MapView>
 
-            </View>
+            </View >
         )
     }
     render() {
