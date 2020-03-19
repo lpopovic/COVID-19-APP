@@ -5,6 +5,7 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
+    Keyboard,
 } from 'react-native';
 import {
     getRegionForCoordinates,
@@ -14,25 +15,120 @@ import {
     BASE_COLOR
 } from '../helper'
 import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
-
-class MapScreen extends Component {
+import BaseScreen from './BaseScreen';
+import { TemplateNetwork } from '../service/api';
+const pauseTimeOutListener = 2000 //ms
+class MapScreen extends BaseScreen {
 
     constructor(props) {
         super(props)
         this.state = {
-            region: getRegionForCoordinates(points),
-            currentCountry: 'Poljska',
+            points: [],
+            currentCountry: 'Test',
+            loading: true,
+            region: {
+                latitude: 0,
+                longitude: 0,
+                latitudeDelta: 0,
+                longitudeDelta: 0,
+            }
         }
+    }
+    componentDidMount() {
+        super.componentDidMount()
+        this.apiCallHandler()
+    }
+    componentWillUnmount() {
+        super.componentWillUnmount()
+    }
+    apiCallHandler = () => {
+        TemplateNetwork.fetchTestPoints().then(
+            res => {
+                this.setNewStateHandler({
+                    region: getRegionForCoordinates(res.data),
+                    points: res.data,
+                    loading: false,
+                })
+            },
+            err => {
+                alert(err)
+                this.showAlertMessage(err)
+            }
+        )
+    }
+    apiCallOnChangeRegionHandler = (region) => {
+
+        TemplateNetwork.fetchGetTestPoints(region).then(
+            res => {
+                this.setNewStateHandler({
+                    points: res.data
+                })
+            },
+            err => {
+                this.showAlertMessage(err)
+            }
+        )
     }
     onPressLongMap = (e) => {
         const { region } = this.state
         const zoom = getZoomRegion(region)
+        if (zoom >= 14) {
+            // alert(zoom)
+            // alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
+            TemplateNetwork.fetchPostTestPoints(e.nativeEvent.coordinate).then(
+                res => {
+                    this.showAlertMessage(`POSLAT USPESNO`)
+                },
+                err => {
+                    this.showAlertMessage(err)
+                }
+            )
+        }else {
+            this.showAlertMessage(`Molimo va da zumirate mapu radi tacnije lokacije, zoom: ${zoom}`)
+        }
+    }
+    onRegionChange = (region) => {
 
-        alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
+        clearTimeout(this.onRegionChangeTimeOut)
+        this.setNewStateHandler({ region, currentRegion: region })
 
+        this.onRegionChangeTimeOut = setTimeout(() => {
+            const { currentRegion } = this.state
+            this.apiCallOnChangeRegionHandler(currentRegion)
+
+        }, pauseTimeOutListener);
 
     }
+    mapContent = () => {
+        return (
+            <View style={styles.mapContainer}>
+                <MapView
+                    ref={component => this._map = component}
+                    provider={PROVIDER_GOOGLE}
+                    style={styles.map}
+                    initialRegion={this.state.region}
+                    onLongPress={e => this.onPressLongMap(e)}
+                    onRegionChangeComplete={this.onRegionChange}
+                    onTouchStart={Keyboard.dismiss}>
+                    <Heatmap
+                        points={this.state.points}
+                        opacity={1}
+                        radius={isAndroid ? 20 : 50}
+                        gradient={{
+                            colorMapSize: 256,
+                            colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
+                            startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
+                        }}
+                    >
+                    </Heatmap>
+                </MapView>
+
+            </View>
+        )
+    }
     render() {
+        const { loading } = this.state
+        const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
         return (
             <SafeAreaView style={styles.mainContainer}>
                 <View style={styles.headerContainer}>
@@ -63,34 +159,7 @@ class MapScreen extends Component {
                     </View>
                     <View style={styles.lineShadowView} />
                 </View>
-                <View style={styles.mapContainer}>
-                    <MapView
-                        ref={component => this._map = component}
-                        provider={PROVIDER_GOOGLE}
-                        style={styles.map}
-                        initialRegion={this.state.region}
-                        onLongPress={e => this.onPressLongMap(e)}
-                        onRegionChange={region => {
-                            clearTimeout(this.timerForMap)
-                            this.timerForMap = setTimeout(() => {
-                                this.setState({ region })
-                            }, 100)
-                        }}
-                    >
-                        <Heatmap
-                            points={points}
-                            opacity={1}
-                            radius={Platform.OS == 'ios' ? 50 : 20}
-                            gradient={{
-                                colorMapSize: 256,
-                                colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
-                                startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
-                            }}
-                        >
-                        </Heatmap>
-                    </MapView>
-
-                </View>
+                {mainDisplay}
             </SafeAreaView>
         )
     }
@@ -111,7 +180,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     lineShadowView: {
-        height: 1, 
+        height: 1,
         width: '100%',
         backgroundColor: BASE_COLOR.black,
         shadowColor: "#000",
