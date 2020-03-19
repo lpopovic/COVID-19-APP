@@ -30,20 +30,20 @@ class TemplateNetwork {
             const latitudeDelta = Number(region.latitudeDelta).toFixed(6)
             const longitudeDelta = Number(region.longitudeDelta).toFixed(6)
             const url = RestUrl.getTestMoreLocations(latitude, longitude, latitudeDelta, longitudeDelta)
-            // try {
-            //     const { data } = await axios.get(url)
+            try {
+                const { data } = await axios.get(url)
 
-            //     resolve(data)
+                resolve(data)
 
-            // } catch (error) {
-            //     try {
-            //         const { message } = error.response.data.error
-            //         reject(message)
-            //     } catch  {
-            //         reject(error.message)
+            } catch (error) {
+                try {
+                    const { message } = error.response.data.error
+                    reject(message)
+                } catch  {
+                    reject(error.message)
 
-            //     }
-            // }
+                }
+            }
         });
     static fetchPostTestPoints = (coordinate) =>
         new Promise(async (resolve, reject) => {

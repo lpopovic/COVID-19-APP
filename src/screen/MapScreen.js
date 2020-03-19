@@ -60,6 +60,7 @@ class MapScreen extends BaseScreen {
 
         TemplateNetwork.fetchGetTestPoints(region).then(
             res => {
+                alert(res.data.length)
                 this.setNewStateHandler({
                     points: res.data
                 })
