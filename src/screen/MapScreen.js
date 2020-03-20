@@ -15,10 +15,13 @@ import {
     points,
     BASE_COLOR,
     heatMapGradient,
+    customMessages,
+    getRadiusFromRegion,
 } from '../helper'
 import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
-import { TemplateNetwork } from '../service/api';
+import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
+import { LocationNetwork } from '../service/api';
 const pauseTimeOutListener = 2000 //ms
 const zoom = 0
 const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
@@ -45,24 +48,30 @@ class MapScreen extends BaseScreen {
     }
     componentDidMount() {
         super.componentDidMount()
-        this.apiCallHandler()
+        this.apiCallInitialHandler()
         this.disableDetectChangeRegion()
     }
     componentWillUnmount() {
         super.componentWillUnmount()
     }
-    apiCallHandler = () => {
-        TemplateNetwork.fetchTestPoints().then(
+    apiCallInitialHandler = () => {
+        const { region } = this.state
+        const radius = getRadiusFromRegion(region)
+        LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 this.setNewStateHandler({
                     // region: getRegionForCoordinates(res.data),
-                    points: res.data,
+                    points: res,
                     loading: false,
                 })
             },
             err => {
-                alert(err)
                 this.showAlertMessage(err)
+                this.setNewStateHandler({
+                    loading: false,
+                })
+                this._firstTimeInitialMap = true
+
             }
         )
     }
@@ -75,16 +84,22 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     apiCallOnChangeRegionHandler = (region) => {
-
-        TemplateNetwork.fetchGetTestPoints(region).then(
+        const radius = getRadiusFromRegion(region)
+        LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
-                // alert(`Broj tacaka:${res.data.length}`)
-                this.setNewStateHandler({
-                    points: res.data
-                })
+                if (res.length > 0) {
+                    this.setNewStateHandler({
+                        points: res,
+                    })
+                } else {
+                    showDefaultSnackBar(customMessages.noNearbyFound)
+                }
+
             },
             err => {
                 this.showAlertMessage(err)
+                this._firstTimeInitialMap = true
+
             }
         )
     }
@@ -92,18 +107,16 @@ class MapScreen extends BaseScreen {
         const { region } = this.state
         const zoom = getZoomRegion(region)
         if (zoom >= 9) {
-            // alert(zoom)
-            // alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
-            TemplateNetwork.fetchPostTestPoints(e.nativeEvent.coordinate).then(
+            LocationNetwork.fetchPostCreateNewPoint(e.nativeEvent.coordinate).then(
                 res => {
-                    this.showAlertMessage(`POSLAT USPESNO`)
+                    showDefaultSnackBar(customMessages.locationSaved)
                 },
                 err => {
                     this.showAlertMessage(err)
                 }
             )
         } else {
-            this.showAlertMessage(`Molimo va da zumirate mapu radi tacnije lokacije, zoom: ${zoom}`)
+            showDefaultSnackBar(customMessages.cantUseLocation)
         }
     }
     onRegionChange = (region) => {

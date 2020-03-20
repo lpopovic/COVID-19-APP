@@ -4,5 +4,6 @@ export const BASE_COLOR = {
     lightGray: '#BABABA',
     white: 'white',
     black: 'black',
-    darkGray: '#747876'
+    darkGray: '#747876',
+    blueGray: '#98AFC7',
 }
