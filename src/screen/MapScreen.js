@@ -18,7 +18,7 @@ import {
     customMessages,
     getRadiusFromRegion,
 } from '../helper'
-import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Heatmap, Marker } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
@@ -26,24 +26,28 @@ const pauseTimeOutListener = 2000 //ms
 const zoom = 0
 const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
 let activeTimerOnChangeLocation = false
+
+
+
 class MapScreen extends BaseScreen {
 
     constructor(props) {
         super(props)
+
         this._firstTimeInitialMap = false
         this.state = {
             points: [],
             currentCountry: 'Test',
             loading: true,
             region: {
-                latitude: 34.669358,
-                longitude: -40.957031,
+                latitude: 0,
+                longitude: 0,
                 latitudeDelta: distanceDelta,
                 longitudeDelta:
                     Dimensions.get('window').width /
                     Dimensions.get('window').height *
                     distanceDelta
-            }
+            },
         }
     }
     componentDidMount() {
@@ -154,6 +158,17 @@ class MapScreen extends BaseScreen {
                             gradient={heatMapGradient} />
 
                         : null}
+                    {this.props.userLocation != null ?
+                        <Marker
+                            coordinate={{
+                                latitude: this.props.userLocation.latitude,
+                                longitude: 0,
+                            }}
+                            title={"Ja"}
+                        />
+                        : null}
+
+
                 </MapView>
 
             </View >

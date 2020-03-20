@@ -1,11 +1,40 @@
 
 import React, { Component } from 'react';
+
 import MapScreen from './src/screen/MapScreen'
+import Geolocation from '@react-native-community/geolocation';
+import CustomActivityIndicator from './src/components/common/CustomActivityIndicator'
+import { BASE_COLOR } from './src/helper';
+import CustomAlert from './src/components/common/CustomAlert';
 class App extends Component {
-  render() {
-    return (
-      <MapScreen />
+  state = {
+    initialPosition: null,
+    loading: true
+  };
+  componentDidMount() {
+    Geolocation.getCurrentPosition(
+      position => {
+        const initialPosition = {
+          latitude: Number(position.coords.latitude),
+          longitude: Number(position.coords.longitude),
+        };
+        this.setState({ initialPosition, loading: false });
+      },
+      error => { CustomAlert.showAlert(JSON.stringify(error)), this.setState({ loading: false }) },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+  }
+  render() {
+    const { loading } = this.state
+    if (loading == true) {
+      return (
+        <CustomActivityIndicator size="large" color={BASE_COLOR.black} />
+      );
+    } else {
+      return (
+        <MapScreen userLocation={this.state.initialPosition} />
+      );
+    }
   };
 }
 

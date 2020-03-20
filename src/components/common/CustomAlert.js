@@ -9,7 +9,7 @@ class CustomAlert extends Component {
         // Works on both iOS and Android
 
         Alert.alert(
-            'KLOPA',
+            'COVID-19',
             message,
             [
                 { text: 'OK' },
