@@ -6,37 +6,47 @@ import {
     StyleSheet,
     TouchableOpacity,
     Keyboard,
+    Dimensions,
 } from 'react-native';
 import {
     getRegionForCoordinates,
     getZoomRegion,
     isAndroid,
     points,
-    BASE_COLOR
+    BASE_COLOR,
+    heatMapGradient,
 } from '../helper'
 import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
 import { TemplateNetwork } from '../service/api';
 const pauseTimeOutListener = 2000 //ms
+const zoom = 0
+const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
+let activeTimerOnChangeLocation = false
 class MapScreen extends BaseScreen {
 
     constructor(props) {
         super(props)
+        this._firstTimeInitialMap = false
         this.state = {
             points: [],
             currentCountry: 'Test',
             loading: true,
             region: {
-                latitude: 0,
-                longitude: 0,
-                latitudeDelta: 0,
-                longitudeDelta: 0,
+                latitude: 34.669358,
+                longitude: -40.957031,
+                latitudeDelta: distanceDelta,
+                longitudeDelta:
+                    Dimensions.get('window').width /
+                    Dimensions.get('window').height *
+                    distanceDelta
             }
         }
     }
     componentDidMount() {
         super.componentDidMount()
         this.apiCallHandler()
+        this.disableDetectChangeRegion()
     }
     componentWillUnmount() {
         super.componentWillUnmount()
@@ -45,7 +55,7 @@ class MapScreen extends BaseScreen {
         TemplateNetwork.fetchTestPoints().then(
             res => {
                 this.setNewStateHandler({
-                    region: getRegionForCoordinates(res.data),
+                    // region: getRegionForCoordinates(res.data),
                     points: res.data,
                     loading: false,
                 })
@@ -56,11 +66,19 @@ class MapScreen extends BaseScreen {
             }
         )
     }
+    disableDetectChangeRegion = () => {
+        activeTimerOnChangeLocation = false
+        clearTimeout(this._activeTimerOnChangeLocation)
+        this._activeTimerOnChangeLocation = setTimeout(() => {
+            activeTimerOnChangeLocation = true
+
+        }, pauseTimeOutListener);
+    }
     apiCallOnChangeRegionHandler = (region) => {
 
         TemplateNetwork.fetchGetTestPoints(region).then(
             res => {
-                alert(`Broj tacaka:${res.data.length}`)
+                // alert(`Broj tacaka:${res.data.length}`)
                 this.setNewStateHandler({
                     points: res.data
                 })
@@ -89,15 +107,19 @@ class MapScreen extends BaseScreen {
         }
     }
     onRegionChange = (region) => {
+        if (this._firstTimeInitialMap == true) {
+            clearTimeout(this.onRegionChangeTimeOut)
+            this.setNewStateHandler({ region, currentRegion: region })
+            if (activeTimerOnChangeLocation === true) {
+                this.onRegionChangeTimeOut = setTimeout(() => {
+                    const { currentRegion } = this.state
+                    this.apiCallOnChangeRegionHandler(currentRegion)
 
-        clearTimeout(this.onRegionChangeTimeOut)
-        this.setNewStateHandler({ region, currentRegion: region })
-
-        this.onRegionChangeTimeOut = setTimeout(() => {
-            const { currentRegion } = this.state
-            this.apiCallOnChangeRegionHandler(currentRegion)
-
-        }, pauseTimeOutListener);
+                }, pauseTimeOutListener);
+            }
+        } else {
+            this._firstTimeInitialMap = true
+        }
 
     }
     mapContent = () => {
@@ -112,17 +134,12 @@ class MapScreen extends BaseScreen {
                     onRegionChangeComplete={this.onRegionChange}
                     onTouchStart={Keyboard.dismiss}>
                     {this.state.points.length > 0 ?
-                        < Heatmap
+                        <Heatmap
                             points={this.state.points}
                             opacity={1}
                             radius={isAndroid ? 20 : 50}
-                            gradient={{
-                                colorMapSize: 256,
-                                colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
-                                startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
-                            }}
-                        >
-                        </Heatmap>
+                            gradient={heatMapGradient} />
+
                         : null}
                 </MapView>
 
@@ -135,27 +152,11 @@ class MapScreen extends BaseScreen {
         return (
             <SafeAreaView style={styles.mainContainer}>
                 <View style={styles.headerContainer}>
-                    <View style={{
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                        flex: 1,
-                    }}>
+                    <View style={styles.headerAlignItems}>
                         <TouchableOpacity onPress={() => alert("Press country")}>
-                            <View style={{
-                                flexDirection: 'row',
-                                padding: 4,
-                                borderColor: 'black',
-                                borderWidth: 1,
-                                borderRadius: 4,
-                                justifyContent: 'center',
-                                alignContent: 'center',
-                                backgroundColor: 'ligthgray',
-                                width: 170,
-                                margin: 8
-                            }}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Drzava:</Text>
-                                <Text style={{ marginLeft: 8, fontWeight: 'bold', fontSize: 18 }}>Poljska</Text>
+                            <View style={styles.btnCountry}>
+                                <Text style={styles.btnTitle}>Drzava:</Text>
+                                <Text style={[{ marginLeft: 8 }, styles.btnTitle]}>{this.state.currentCountry}</Text>
                             </View>
                         </TouchableOpacity>
 
@@ -194,7 +195,29 @@ const styles = StyleSheet.create({
         shadowOpacity: 1.90,
         shadowRadius: 4.5,
         elevation: 8,
-    }
+    },
+    headerAlignItems: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'row',
+        flex: 1,
+    },
+    btnCountry: {
+        flexDirection: 'row',
+        padding: 4,
+        borderColor: 'black',
+        borderWidth: 1,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignContent: 'center',
+        backgroundColor: BASE_COLOR.darkOrange,
+        width: 170,
+        margin: 8
+    },
+    btnTitle: {
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
 });
 
 
