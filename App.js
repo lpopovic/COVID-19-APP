@@ -11,7 +11,25 @@ class App extends Component {
     initialPosition: null,
     loading: true
   };
+  watchID = null;
+
   componentDidMount() {
+
+    this.getCurrentLocation()
+    this.watchID = Geolocation.watchPosition(position => {
+      const initialPosition = {
+        latitude: Number(position.coords.latitude),
+        longitude: Number(position.coords.longitude),
+      };
+      this.setState({ initialPosition });
+    });
+  }
+  componentWillUnmount() {
+    this.watchID != null && Geolocation.clearWatch(this.watchID);
+
+  }
+
+  getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       position => {
         const initialPosition = {
@@ -24,6 +42,7 @@ class App extends Component {
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
   }
+
   render() {
     const { loading } = this.state
     if (loading == true) {
@@ -32,7 +51,9 @@ class App extends Component {
       );
     } else {
       return (
-        <MapScreen userLocation={this.state.initialPosition} />
+        <MapScreen
+          userLocation={this.state.initialPosition}
+          requestUserLocation={() => this.getCurrentLocation()} />
       );
     }
   };

@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     Keyboard,
     Dimensions,
-    Animated,
+    Image,
 } from 'react-native';
 import {
     getRegionForCoordinates,
@@ -18,14 +18,19 @@ import {
     heatMapGradient,
     customMessages,
     getRadiusFromRegion,
+    typeOfGoogleMap,
 } from '../helper'
 import MapView, { PROVIDER_GOOGLE, Heatmap, Marker } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
+import { iconAssets } from '../assets';
 const pauseTimeOutListener = 2000 //ms
 const zoom = 1
 const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
+const zoomMarker = 13
+const latitudeDeltaMarker = Math.exp(Math.log(360) - (zoomMarker * Math.LN2));
+const longitudeDeltaMarker = Dimensions.get('window').width / Dimensions.get('window').height * latitudeDeltaMarker
 let activeTimerOnChangeLocation = false
 
 
@@ -39,6 +44,7 @@ class MapScreen extends BaseScreen {
         this.state = {
             points: [],
             currentCountry: 'Test',
+            currentMap: typeOfGoogleMap.standard,
             loading: true,
             region: {
                 latitude: 0,
@@ -91,6 +97,9 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     apiCallOnChangeRegionHandler = (region) => {
+        this.setNewStateHandler({
+            points: [],
+        })
         const radius = getRadiusFromRegion(region)
 
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
@@ -143,10 +152,25 @@ class MapScreen extends BaseScreen {
         }
 
     }
+    showUserLocationHandler = () => {
+        if (this.props.userLocation !== null) {
+            this._map.animateToRegion(
+                {
+                    ...this.props.userLocation,
+                    latitudeDelta: latitudeDeltaMarker,
+                    longitudeDelta: longitudeDeltaMarker,
+                },
+                350
+            );
+        } else {
+            this.props.requestUserLocation()
+        }
+    }
     mapContent = () => {
         return (
             <View style={styles.mapContainer}>
                 <MapView
+                    mapType={this.state.currentMap}
                     ref={component => this._map = component}
                     provider={PROVIDER_GOOGLE}
                     style={styles.map}
@@ -168,21 +192,56 @@ class MapScreen extends BaseScreen {
 
 
                 </MapView>
-
+                {this.typeMapBtn()}
+                {this.userLocationBtn()}
             </View >
+        )
+    }
+    userLocationBtn = () => {
+        return (
+            <TouchableOpacity
+                onPress={() => this.showUserLocationHandler()}
+                style={styles.userLocationBtnContainer}>
+                <Image
+                    source={iconAssets.targetIcon}
+                    resizeMode={'contain'}
+                    style={{
+                        tintColor: BASE_COLOR.blueGray,
+                        height: '100%',
+                        width: '100%',
+                    }} />
+            </TouchableOpacity>
+        )
+    }
+    changeTypeMapHandler = () => {
+        const currentMap = this.state.currentMap == typeOfGoogleMap.standard ? typeOfGoogleMap.satellite : typeOfGoogleMap.standard
+        this.setNewStateHandler({
+            currentMap
+        })
+    }
+    typeMapBtn = () => {
+        const icon = this.state.currentMap == typeOfGoogleMap.standard ? iconAssets.satelliteMapIcon : iconAssets.standardMapIcon
+        return (
+            <TouchableOpacity
+                onPress={() => this.changeTypeMapHandler()}
+                style={styles.typeMapBtnContainer}>
+                <Image
+                    source={icon}
+                    resizeMode={'contain'}
+                    style={{
+                        height: '100%',
+                        width: '100%',
+                    }} />
+            </TouchableOpacity>
         )
     }
     userLocationMarker = (coordinate) => {
         return (
             <Marker coordinate={coordinate} title={'JA'}>
-                <Animated.View style={[{
-                    // width: this.markerWidth,
-                    // height: this.markerWidth,
-                    // borderRadius: this.markerWidth / 2,
+                <View style={[{
                     width: 30,
                     height: 30,
                     borderRadius: 30 / 2,
-                }, {
                     backgroundColor: 'rgba(0, 0, 255, 0.3)',
                     justifyContent: 'center',
                     alignContent: 'center',
@@ -196,10 +255,9 @@ class MapScreen extends BaseScreen {
                         width: 15,
                         height: 15
                     }}>
-
                     </View>
 
-                </Animated.View>
+                </View>
 
             </Marker>
         )
@@ -276,6 +334,37 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
     },
+    userLocationBtnContainer: {
+        backgroundColor: BASE_COLOR.white,
+        borderWidth: 1,
+        borderColor: BASE_COLOR.blueGray,
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        margin: 8,
+        height: 40,
+        width: 40,
+        borderRadius: 20,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+        padding: 8,
+    },
+    typeMapBtnContainer: {
+        backgroundColor: BASE_COLOR.white,
+        borderWidth: 1,
+        borderColor: BASE_COLOR.blueGray,
+        position: 'absolute',
+        right: 0,
+        margin: 8,
+        height: 40,
+        width: 40,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+    }
 });
 
 

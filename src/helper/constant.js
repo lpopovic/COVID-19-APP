@@ -3,6 +3,11 @@ export const heatMapGradient = {
     colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
     startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
 }
+export const typeOfGoogleMap = {
+    standard:'standard',
+    satellite:'satellite',
+    hybrid:'hybrid',
+}
 export const zoomLevel = [
     591657550.500000,
     295828775.300000,
