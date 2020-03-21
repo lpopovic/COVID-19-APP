@@ -1,5 +1,5 @@
 const ROOT_URL = 'https://hasheet.com';
-const ROOT_URL_API = `${ROOT_URL}/api/redis/`
+const ROOT_URL_API = `${ROOT_URL}/api/`
 const withKey = url => `${ROOT_URL_API}${url}`
 
 class RestUrl {

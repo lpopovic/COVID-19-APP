@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     Keyboard,
     Dimensions,
+    Animated,
 } from 'react-native';
 import {
     getRegionForCoordinates,
@@ -23,7 +24,7 @@ import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
 const pauseTimeOutListener = 2000 //ms
-const zoom = 0
+const zoom = 1
 const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
 let activeTimerOnChangeLocation = false
 
@@ -55,9 +56,11 @@ class MapScreen extends BaseScreen {
         this.apiCallInitialHandler()
         this.disableDetectChangeRegion()
     }
+
     componentWillUnmount() {
         super.componentWillUnmount()
     }
+
     apiCallInitialHandler = () => {
         const { region } = this.state
         const radius = getRadiusFromRegion(region)
@@ -89,6 +92,7 @@ class MapScreen extends BaseScreen {
     }
     apiCallOnChangeRegionHandler = (region) => {
         const radius = getRadiusFromRegion(region)
+
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 if (res.length > 0) {
@@ -159,19 +163,45 @@ class MapScreen extends BaseScreen {
 
                         : null}
                     {this.props.userLocation != null ?
-                        <Marker
-                            coordinate={{
-                                latitude: this.props.userLocation.latitude,
-                                longitude: 0,
-                            }}
-                            title={"Ja"}
-                        />
+                        this.userLocationMarker(this.props.userLocation)
                         : null}
 
 
                 </MapView>
 
             </View >
+        )
+    }
+    userLocationMarker = (coordinate) => {
+        return (
+            <Marker coordinate={coordinate} title={'JA'}>
+                <Animated.View style={[{
+                    // width: this.markerWidth,
+                    // height: this.markerWidth,
+                    // borderRadius: this.markerWidth / 2,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 30 / 2,
+                }, {
+                    backgroundColor: 'rgba(0, 0, 255, 0.3)',
+                    justifyContent: 'center',
+                    alignContent: 'center',
+                    alignItems: 'center'
+                }]}>
+                    <View style={{
+                        backgroundColor: 'rgba(0, 0, 255, 1.0)',
+                        borderRadius: 7.5,
+                        borderColor: BASE_COLOR.white,
+                        borderWidth: 2,
+                        width: 15,
+                        height: 15
+                    }}>
+
+                    </View>
+
+                </Animated.View>
+
+            </Marker>
         )
     }
     render() {

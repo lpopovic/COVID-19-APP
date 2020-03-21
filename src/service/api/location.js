@@ -32,17 +32,22 @@ class LocationNetwork {
             try {
                 const { data } = await axios.get(url)
 
-
                 const object = data.data.map(item => {
 
+                    const longitude = Number(item.longitude)
+                    const latitude = Number(item.latitude)
+                    const weight = 1
                     return {
-                        longitude: Number(item.longitude),
-                        latitude: Number(item.latitude),
-                        weight: 1,
+                        longitude,
+                        latitude,
+                        weight,
                     };
 
                 })
+
                 resolve(object)
+            
+
 
             } catch (error) {
                 try {
