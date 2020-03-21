@@ -6,6 +6,7 @@ import {
     StyleSheet,
     TouchableOpacity,
     Keyboard,
+    Alert,
 } from 'react-native';
 import {
     getRegionForCoordinates,
@@ -14,6 +15,9 @@ import {
     points,
     BASE_COLOR
 } from '../helper'
+import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
+import BottomSheet from 'reanimated-bottom-sheet'
+import TagsView from '../components/common/TagsView'
 import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
 import { TemplateNetwork } from '../service/api';
@@ -31,7 +35,13 @@ class MapScreen extends BaseScreen {
                 longitude: 0,
                 latitudeDelta: 0,
                 longitudeDelta: 0,
-            }
+            },
+            changeTag1: 0,
+            changeTag2: 0,
+            tagListSelect1: true,
+            tagListSelect2: true,
+            answer1: [{ name: 'Yes', id: 0 }],
+            answer2: [{ name: 'No', id: 1 }],
         }
     }
     componentDidMount() {
@@ -73,6 +83,7 @@ class MapScreen extends BaseScreen {
         const { region } = this.state
         const zoom = getZoomRegion(region)
         if (zoom >= 14) {
+        this.bottomSheet.snapTo(0)
             // alert(zoom)
             // alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
             TemplateNetwork.fetchPostTestPoints(e.nativeEvent.coordinate).then(
@@ -83,7 +94,7 @@ class MapScreen extends BaseScreen {
                     this.showAlertMessage(err)
                 }
             )
-        }else {
+        } else {
             this.showAlertMessage(`Molimo va da zumirate mapu radi tacnije lokacije, zoom: ${zoom}`)
         }
     }
@@ -126,11 +137,71 @@ class MapScreen extends BaseScreen {
             </View>
         )
     }
+
+    onSelectTagView1 = (answer1, tagListSelect1) => {
+        const changeTag1 = this.state.changeTag1 === 0 ? 1 : 0
+        this.setState({ answer1, tagListSelect1, changeTag1 })
+    }
+    onSelectTagView2 = (answer2, tagListSelect2) => {
+        const changeTag2 = this.state.changeTag2 === 0 ? 1 : 0
+        this.setState({ answer2, tagListSelect2, changeTag2 })
+    }
+
+    renderContent = () => (
+        <View style={{ backgroundColor: 'white', paddingBottom: 55 }}>
+            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>Have you tested positive for the Corona Virus?</Text>
+            <View style={{ height: 50 }}>
+                <TagsView
+                    extraData={this.state.changeTag1}
+                    arrayAllItems={[{ name: 'Yes', id: 0 }, { name: 'No', id: 1 }, { name: 'Pending', id: 2 }, { name: 'Not Tested', id: 3 }]}
+                    selected={this.state.answer1}
+                    isExclusive={true}
+                    selectedItem={(select) => this.onSelectTagView1(select, true)}
+                    isSelectedOther={this.state.tagListSelect1}
+                />
+            </View>
+            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }} >Are you having symptoms?</Text>
+            <View style={{ height: 50 }}>
+                <TagsView
+                    extraData={this.state.changeTag2}
+                    arrayAllItems={[{ name: 'Yes', id: 0 }, { name: 'No', id: 1 }]}
+                    selected={this.state.answer2}
+                    isExclusive={true}
+                    selectedItem={(select) => this.onSelectTagView2(select, true)}
+                    isSelectedOther={this.state.tagListSelect2}
+                />
+            </View>
+            {isAndroid ?
+                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => alert("Submit")}>
+                    <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
+                    </View>
+                </RNGHTouchableOpacity>
+                :
+                <TouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => alert("Submit")}>
+                    <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
+                    </View>
+                </TouchableOpacity>
+            }
+        </View>
+    )
+
+    renderHeader = () => (
+        <View style={styles.header}>
+            <View style={styles.panelHeader}>
+                <View style={styles.panelHandle} />
+            </View>
+        </View>
+    )
+
+    // bs = React.createRef()
+
     render() {
         const { loading } = this.state
         const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
         return (
-            <SafeAreaView style={styles.mainContainer}>
+            <View style={styles.mainContainer}>
                 <View style={styles.headerContainer}>
                     <View style={{
                         justifyContent: 'space-between',
@@ -159,8 +230,18 @@ class MapScreen extends BaseScreen {
                     </View>
                     <View style={styles.lineShadowView} />
                 </View>
+
                 {mainDisplay}
-            </SafeAreaView>
+                <BottomSheet
+                    // ref={this.bs}
+                    ref={ref => this.bottomSheet = ref}
+                    snapPoints={[270, 0]}
+                    renderContent={this.renderContent}
+                    renderHeader={this.renderHeader}
+                    enabledInnerScrolling={false}
+                    initialSnap={1}
+                />
+            </View>
         )
     }
 }
@@ -191,7 +272,24 @@ const styles = StyleSheet.create({
         shadowOpacity: 1.90,
         shadowRadius: 4.5,
         elevation: 8,
-    }
+    },
+    header: {
+        backgroundColor: 'white',
+        shadowColor: '#000000',
+        paddingTop: 10,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    panelHeader: {
+        alignItems: 'center',
+    },
+    panelHandle: {
+        width: 40,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#00000040',
+        marginBottom: 10,
+    },
 });
 
 
