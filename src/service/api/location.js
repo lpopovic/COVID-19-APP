@@ -1,9 +1,9 @@
 import axios from '../axios'
 import { RestUrl } from './url'
-class TemplateNetwork {
+class LocationNetwork {
 
 
-    static fetchTestPoints = () =>
+    static fetchGetAllPoints = () =>
         new Promise(async (resolve, reject) => {
             const url = RestUrl.getTestLocation("")
 
@@ -22,30 +22,44 @@ class TemplateNetwork {
                 }
             }
         });
-    static fetchGetTestPoints = (region) =>
+    static fetchGetPointsForRegion = (region, radius) =>
         new Promise(async (resolve, reject) => {
 
             const latitude = Number(region.latitude).toFixed(6)
             const longitude = Number(region.longitude).toFixed(6)
-            const latitudeDelta = Number(region.latitudeDelta).toFixed(6)
-            const longitudeDelta = Number(region.longitudeDelta).toFixed(6)
-            const url = RestUrl.getTestMoreLocations(latitude, longitude, latitudeDelta, longitudeDelta)
-            // try {
-            //     const { data } = await axios.get(url)
 
-            //     resolve(data)
+            const url = RestUrl.getTestMoreLocations(latitude, longitude, radius)
+            try {
+                const { data } = await axios.get(url)
 
-            // } catch (error) {
-            //     try {
-            //         const { message } = error.response.data.error
-            //         reject(message)
-            //     } catch  {
-            //         reject(error.message)
+                const object = data.data.map(item => {
 
-            //     }
-            // }
+                    const longitude = Number(item.longitude)
+                    const latitude = Number(item.latitude)
+                    const weight = 1
+                    return {
+                        longitude,
+                        latitude,
+                        weight,
+                    };
+
+                })
+
+                resolve(object)
+            
+
+
+            } catch (error) {
+                try {
+                    const { message } = error.response.data.error
+                    reject(message)
+                } catch  {
+                    reject(error.message)
+
+                }
+            }
         });
-    static fetchPostTestPoints = (coordinate) =>
+    static fetchPostCreateNewPoint = (coordinate) =>
         new Promise(async (resolve, reject) => {
             const url = RestUrl.getTestLocation("")
             const latitude = Number(coordinate.latitude).toFixed(6)
@@ -71,4 +85,4 @@ class TemplateNetwork {
         });
 }
 
-export { TemplateNetwork }
+export { LocationNetwork }

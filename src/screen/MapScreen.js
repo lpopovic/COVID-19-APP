@@ -6,26 +6,39 @@ import {
     StyleSheet,
     TouchableOpacity,
     Keyboard,
-    Alert,
+    Dimensions,
+    Animated,
 } from 'react-native';
 import {
     getRegionForCoordinates,
     getZoomRegion,
     isAndroid,
     points,
-    BASE_COLOR
+    BASE_COLOR,
+    heatMapGradient,
+    customMessages,
+    getRadiusFromRegion,
 } from '../helper'
 import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
 import TagsView from '../components/common/TagsView'
-import MapView, { PROVIDER_GOOGLE, Heatmap } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Heatmap, Marker } from 'react-native-maps';
 import BaseScreen from './BaseScreen';
-import { TemplateNetwork } from '../service/api';
+import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
+import { LocationNetwork } from '../service/api';
 const pauseTimeOutListener = 2000 //ms
+const zoom = 1
+const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
+let activeTimerOnChangeLocation = false
+
+
+
 class MapScreen extends BaseScreen {
 
     constructor(props) {
         super(props)
+
+        this._firstTimeInitialMap = false
         this.state = {
             points: [],
             currentCountry: 'Test',
@@ -33,8 +46,11 @@ class MapScreen extends BaseScreen {
             region: {
                 latitude: 0,
                 longitude: 0,
-                latitudeDelta: 0,
-                longitudeDelta: 0,
+                latitudeDelta: distanceDelta,
+                longitudeDelta:
+                    Dimensions.get('window').width /
+                    Dimensions.get('window').height *
+                    distanceDelta
             },
             changeTag1: 0,
             changeTag2: 0,
@@ -46,68 +62,95 @@ class MapScreen extends BaseScreen {
     }
     componentDidMount() {
         super.componentDidMount()
-        this.apiCallHandler()
+        this.apiCallInitialHandler()
+        this.disableDetectChangeRegion()
     }
+
     componentWillUnmount() {
         super.componentWillUnmount()
     }
-    apiCallHandler = () => {
-        TemplateNetwork.fetchTestPoints().then(
+
+    apiCallInitialHandler = () => {
+        const { region } = this.state
+        const radius = getRadiusFromRegion(region)
+        LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 this.setNewStateHandler({
-                    region: getRegionForCoordinates(res.data),
-                    points: res.data,
+                    // region: getRegionForCoordinates(res.data),
+                    points: res,
                     loading: false,
                 })
             },
             err => {
-                alert(err)
                 this.showAlertMessage(err)
+                this.setNewStateHandler({
+                    loading: false,
+                })
+                this._firstTimeInitialMap = true
+
             }
         )
     }
-    apiCallOnChangeRegionHandler = (region) => {
+    disableDetectChangeRegion = () => {
+        activeTimerOnChangeLocation = false
+        clearTimeout(this._activeTimerOnChangeLocation)
+        this._activeTimerOnChangeLocation = setTimeout(() => {
+            activeTimerOnChangeLocation = true
 
-        TemplateNetwork.fetchGetTestPoints(region).then(
+        }, pauseTimeOutListener);
+    }
+    apiCallOnChangeRegionHandler = (region) => {
+        const radius = getRadiusFromRegion(region)
+
+        LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
-                this.setNewStateHandler({
-                    points: res.data
-                })
+                if (res.length > 0) {
+                    this.setNewStateHandler({
+                        points: res,
+                    })
+                } else {
+                    showDefaultSnackBar(customMessages.noNearbyFound)
+                }
+
             },
             err => {
                 this.showAlertMessage(err)
+                this._firstTimeInitialMap = true
+
             }
         )
     }
     onPressLongMap = (e) => {
         const { region } = this.state
         const zoom = getZoomRegion(region)
-        if (zoom >= 14) {
-        this.bottomSheet.snapTo(0)
-            // alert(zoom)
-            // alert(`ON LONG PRESS \n zoom: ${zoom} \n  latitude:${e.nativeEvent.coordinate.latitude} \n  longitude:${e.nativeEvent.coordinate.longitude}`)
-            TemplateNetwork.fetchPostTestPoints(e.nativeEvent.coordinate).then(
+        if (zoom >= 9) {
+            this.bottomSheet.snapTo(0)
+            LocationNetwork.fetchPostCreateNewPoint(e.nativeEvent.coordinate).then(
                 res => {
-                    this.showAlertMessage(`POSLAT USPESNO`)
+                    showDefaultSnackBar(customMessages.locationSaved)
                 },
                 err => {
                     this.showAlertMessage(err)
                 }
             )
         } else {
-            this.showAlertMessage(`Molimo va da zumirate mapu radi tacnije lokacije, zoom: ${zoom}`)
+            showDefaultSnackBar(customMessages.cantUseLocation)
         }
     }
     onRegionChange = (region) => {
+        if (this._firstTimeInitialMap == true) {
+            clearTimeout(this.onRegionChangeTimeOut)
+            this.setNewStateHandler({ region, currentRegion: region })
+            if (activeTimerOnChangeLocation === true) {
+                this.onRegionChangeTimeOut = setTimeout(() => {
+                    const { currentRegion } = this.state
+                    this.apiCallOnChangeRegionHandler(currentRegion)
 
-        clearTimeout(this.onRegionChangeTimeOut)
-        this.setNewStateHandler({ region, currentRegion: region })
-
-        this.onRegionChangeTimeOut = setTimeout(() => {
-            const { currentRegion } = this.state
-            this.apiCallOnChangeRegionHandler(currentRegion)
-
-        }, pauseTimeOutListener);
+                }, pauseTimeOutListener);
+            }
+        } else {
+            this._firstTimeInitialMap = true
+        }
 
     }
     mapContent = () => {
@@ -121,20 +164,54 @@ class MapScreen extends BaseScreen {
                     onLongPress={e => this.onPressLongMap(e)}
                     onRegionChangeComplete={this.onRegionChange}
                     onTouchStart={Keyboard.dismiss}>
-                    <Heatmap
-                        points={this.state.points}
-                        opacity={1}
-                        radius={isAndroid ? 20 : 50}
-                        gradient={{
-                            colorMapSize: 256,
-                            colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
-                            startPoints: [0.1, 0.25, 0.50, 0.75, 1.0],
-                        }}
-                    >
-                    </Heatmap>
+                    {this.state.points.length > 0 ?
+                        <Heatmap
+                            points={this.state.points}
+                            opacity={1}
+                            radius={isAndroid ? 20 : 20}
+                            gradient={heatMapGradient} />
+
+                        : null}
+                    {this.props.userLocation != null ?
+                        this.userLocationMarker(this.props.userLocation)
+                        : null}
+
+
                 </MapView>
 
-            </View>
+            </View >
+        )
+    }
+    userLocationMarker = (coordinate) => {
+        return (
+            <Marker coordinate={coordinate} title={'JA'}>
+                <Animated.View style={[{
+                    // width: this.markerWidth,
+                    // height: this.markerWidth,
+                    // borderRadius: this.markerWidth / 2,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 30 / 2,
+                }, {
+                    backgroundColor: 'rgba(0, 0, 255, 0.3)',
+                    justifyContent: 'center',
+                    alignContent: 'center',
+                    alignItems: 'center'
+                }]}>
+                    <View style={{
+                        backgroundColor: 'rgba(0, 0, 255, 1.0)',
+                        borderRadius: 7.5,
+                        borderColor: BASE_COLOR.white,
+                        borderWidth: 2,
+                        width: 15,
+                        height: 15
+                    }}>
+
+                    </View>
+
+                </Animated.View>
+
+            </Marker>
         )
     }
 
@@ -202,35 +279,6 @@ class MapScreen extends BaseScreen {
         const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
         return (
             <View style={styles.mainContainer}>
-                <View style={styles.headerContainer}>
-                    <View style={{
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                        flex: 1,
-                    }}>
-                        <TouchableOpacity onPress={() => alert("Press country")}>
-                            <View style={{
-                                flexDirection: 'row',
-                                padding: 4,
-                                borderColor: 'black',
-                                borderWidth: 1,
-                                borderRadius: 4,
-                                justifyContent: 'center',
-                                alignContent: 'center',
-                                backgroundColor: 'ligthgray',
-                                width: 170,
-                                margin: 8
-                            }}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Drzava:</Text>
-                                <Text style={{ marginLeft: 8, fontWeight: 'bold', fontSize: 18 }}>Poljska</Text>
-                            </View>
-                        </TouchableOpacity>
-
-                    </View>
-                    <View style={styles.lineShadowView} />
-                </View>
-
                 {mainDisplay}
                 <BottomSheet
                     // ref={this.bs}
@@ -289,6 +337,28 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         backgroundColor: '#00000040',
         marginBottom: 10,
+    },
+    headerAlignItems: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'row',
+        flex: 1,
+    },
+    btnCountry: {
+        flexDirection: 'row',
+        padding: 4,
+        borderColor: 'black',
+        borderWidth: 1,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignContent: 'center',
+        backgroundColor: BASE_COLOR.darkOrange,
+        width: 170,
+        margin: 8
+    },
+    btnTitle: {
+        fontWeight: 'bold',
+        fontSize: 18,
     },
 });
 

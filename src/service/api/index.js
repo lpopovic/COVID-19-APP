@@ -1,6 +1,5 @@
 
 //REST API CLASS
-export * from './template'
-
+export * from './location'
 //URL
 export * from './url'
