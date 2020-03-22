@@ -8,17 +8,18 @@ import {
     Keyboard,
     Dimensions,
     Image,
+    Alert,
 } from 'react-native';
 import {
-    getRegionForCoordinates,
     getZoomRegion,
     isAndroid,
-    points,
     BASE_COLOR,
     heatMapGradient,
     customMessages,
     getRadiusFromRegion,
     typeOfGoogleMap,
+    getStorageData,
+    STORAGE_KEY,
 } from '../helper'
 import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
@@ -45,6 +46,7 @@ class MapScreen extends BaseScreen {
 
         this._firstTimeInitialMap = false
         this.state = {
+            userPoints: [],
             points: [],
             currentMap: typeOfGoogleMap.standard,
             loading: true,
@@ -74,12 +76,12 @@ class MapScreen extends BaseScreen {
         super.componentWillUnmount()
     }
 
-    apiCallInitialHandler = () => {
+    apiCallInitialHandler = async () => {
         const { region } = this.state
         const radius = getRadiusFromRegion(region)
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
-                this.disableDetectChangeRegion()
+                this._firstTimeInitialMap = true
                 this.setNewStateHandler({
                     points: res,
                     loading: false,
@@ -94,6 +96,20 @@ class MapScreen extends BaseScreen {
 
             }
         )
+        const uuid = await getStorageData(STORAGE_KEY.UUID_APP)
+        if (uuid !== null) {
+            LocationNetwork.fetchGetPointsInsertByUser(uuid).then(
+                res => {
+
+                    this.setNewStateHandler({
+                        userPoints: res,
+                    })
+                },
+                err => {
+                    this.showAlertMessage(err)
+                }
+            )
+        }
     }
     disableDetectChangeRegion = () => {
         activeTimerOnChangeLocation = false
@@ -104,9 +120,7 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     apiCallOnChangeRegionHandler = (region) => {
-        this.setNewStateHandler({
-            points: [],
-        })
+
         const radius = getRadiusFromRegion(region)
 
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
@@ -132,14 +146,10 @@ class MapScreen extends BaseScreen {
         const zoom = getZoomRegion(region)
         if (zoom >= 9) {
             this.bottomSheet.snapTo(0)
-            LocationNetwork.fetchPostCreateNewPoint(e.nativeEvent.coordinate).then(
-                res => {
-                    showDefaultSnackBar(customMessages.locationSaved)
-                },
-                err => {
-                    this.showAlertMessage(err)
-                }
-            )
+            const onPressPoint = e.nativeEvent.coordinate
+            this.setNewStateHandler({
+                onPressPoint
+            })
         } else {
             showDefaultSnackBar(customMessages.cantUseLocation)
         }
@@ -174,30 +184,70 @@ class MapScreen extends BaseScreen {
             this.props.requestUserLocation()
         }
     }
+    onPressMarker = (position) => {
+        let { userPoints } = this.state
+
+        const onPressOkStatus = () => {
+            const point = userPoints[position]
+            userPoints = userPoints.filter(function (value, index, arr) {
+
+                return index != position;
+
+            });
+            this.setNewStateHandler({ userPoints })
+            LocationNetwork.fetchDeleteRemovePoint(point).then(
+                res => {
+                    showDefaultSnackBar(res)
+                },
+                err => {
+                    this.showAlertMessage(err)
+                }
+            )
+        }
+        const onPressCancelStatus = () => {
+            alert("Cancel")
+        }
+        this.showDialogMessage(`Da li zelite da izbrisete lokaciju?`, onPressOkStatus, onPressCancelStatus)
+    }
     mapContent = () => {
+        const { currentMap, region, points, userPoints } = this.state
+        const { userLocation } = this.props
         return (
             <View style={styles.mapContainer}>
                 <MapView
-                    mapType={this.state.currentMap}
+                    mapType={currentMap}
                     ref={component => this._map = component}
                     provider={PROVIDER_GOOGLE}
                     style={styles.map}
-                    initialRegion={this.state.region}
+                    initialRegion={region}
                     onLongPress={e => this.onPressLongMap(e)}
                     onRegionChangeComplete={this.onRegionChange}
                     onTouchStart={Keyboard.dismiss}>
-                    {this.state.points.length > 0 ?
+                    {points.length > 0 ?
                         <Heatmap
-                            points={this.state.points}
+                            points={points}
                             opacity={1}
                             radius={isAndroid ? 20 : 20}
                             gradient={heatMapGradient} />
 
                         : null}
-                    {this.props.userLocation != null ?
-                        this.userLocationMarker(this.props.userLocation)
+                    {userLocation != null ?
+                        this.userLocationMarker(userLocation)
                         : null}
+                    {userPoints.map((point, index) => {
 
+                        return (
+                            <MapView.Marker
+                                key={index}
+                                coordinate={point}
+                                title={`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}
+                                pinColor={'blue'}
+                                onPress={() => this.onPressMarker(index)}
+                            />
+
+                        )
+
+                    })}
 
                 </MapView>
                 {this.typeMapBtn()}
@@ -279,7 +329,24 @@ class MapScreen extends BaseScreen {
         const changeTag2 = this.state.changeTag2 === 0 ? 1 : 0
         this.setState({ answer2, tagListSelect2, changeTag2 })
     }
+    onPressSubmit = () => {
+        const { onPressPoint } = this.state
+        this.bottomSheet.snapTo(1)
+        this.bottomSheet.snapTo(1)
+        LocationNetwork.fetchPostCreateNewPoint(onPressPoint).then(
+            res => {
+                const { userPoints } = this.state
+                userPoints.push(onPressPoint)
+                this.setNewStateHandler({ userPoints, onPressPoint: null })
+                showDefaultSnackBar(res)
+            },
+            err => {
+                this.setNewStateHandler({ onPressPoint: null })
+                this.showAlertMessage(err)
+            }
+        )
 
+    }
     renderContent = () => (
         <View style={{ backgroundColor: 'white', paddingBottom: 55 }}>
             <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>Have you tested positive for the Corona Virus?</Text>
@@ -305,13 +372,13 @@ class MapScreen extends BaseScreen {
                 />
             </View>
             {isAndroid ?
-                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => alert("Submit")}>
+                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
                         <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
                     </View>
                 </RNGHTouchableOpacity>
                 :
-                <TouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => alert("Submit")}>
+                <TouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
                         <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
                     </View>
@@ -419,7 +486,7 @@ const styles = StyleSheet.create({
         borderColor: BASE_COLOR.blueGray,
         position: 'absolute',
         right: 0,
-        bottom: 0,
+        bottom: isAndroid ? 0 : 44,
         margin: 8,
         height: 40,
         width: 40,
@@ -435,6 +502,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: BASE_COLOR.blueGray,
         position: 'absolute',
+        top: isAndroid ? undefined : 44,
         right: 0,
         margin: 8,
         height: 40,
