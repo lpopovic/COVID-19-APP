@@ -46,7 +46,6 @@ class MapScreen extends BaseScreen {
         this._firstTimeInitialMap = false
         this.state = {
             points: [],
-            currentCountry: 'Test',
             currentMap: typeOfGoogleMap.standard,
             loading: true,
             region: {
@@ -69,7 +68,6 @@ class MapScreen extends BaseScreen {
     componentDidMount() {
         super.componentDidMount()
         this.apiCallInitialHandler()
-        this.disableDetectChangeRegion()
     }
 
     componentWillUnmount() {
@@ -81,8 +79,8 @@ class MapScreen extends BaseScreen {
         const radius = getRadiusFromRegion(region)
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
+                this.disableDetectChangeRegion()
                 this.setNewStateHandler({
-                    // region: getRegionForCoordinates(res.data),
                     points: res,
                     loading: false,
                 })
@@ -330,8 +328,6 @@ class MapScreen extends BaseScreen {
         </View>
     )
 
-    // bs = React.createRef()
-
     render() {
         const { loading } = this.state
         const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
@@ -339,7 +335,6 @@ class MapScreen extends BaseScreen {
             <View style={styles.mainContainer}>
                 {mainDisplay}
                 <BottomSheet
-                    // ref={this.bs}
                     ref={ref => this.bottomSheet = ref}
                     snapPoints={[270, 0]}
                     renderContent={this.renderContent}
