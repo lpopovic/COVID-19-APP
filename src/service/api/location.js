@@ -1,27 +1,8 @@
 import axios from '../axios'
 import { RestUrl } from './url'
+import { Location } from '../../model/location';
 class LocationNetwork {
 
-
-    static fetchGetAllPoints = () =>
-        new Promise(async (resolve, reject) => {
-            const url = RestUrl.getTestLocation("")
-
-            try {
-                const { data } = await axios.get(url)
-
-                resolve(data)
-
-            } catch (error) {
-                try {
-                    const { message } = error.response.data.error
-                    reject(message)
-                } catch  {
-                    reject(error.message)
-
-                }
-            }
-        });
     static fetchGetPointsForRegion = (region, radius) =>
         new Promise(async (resolve, reject) => {
 
@@ -32,21 +13,10 @@ class LocationNetwork {
             try {
                 const { data } = await axios.get(url)
 
-                const object = data.data.map(item => {
-
-                    const longitude = Number(item.longitude)
-                    const latitude = Number(item.latitude)
-                    const weight = 1
-                    return {
-                        longitude,
-                        latitude,
-                        weight,
-                    };
-
-                })
+                const object = Location.createArrayObjects(data.data)
 
                 resolve(object)
-            
+
 
 
             } catch (error) {
@@ -61,7 +31,7 @@ class LocationNetwork {
         });
     static fetchPostCreateNewPoint = (coordinate) =>
         new Promise(async (resolve, reject) => {
-            const url = RestUrl.getTestLocation("")
+            const url = RestUrl.postLocation
             const latitude = Number(coordinate.latitude).toFixed(6)
             const longitude = Number(coordinate.longitude).toFixed(6)
             let formData = {
