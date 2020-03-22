@@ -5,5 +5,9 @@ export const BASE_COLOR = {
     white: 'white',
     black: 'black',
     darkGray: '#747876',
+    textDarkGrey: '#888888',
+    transparent: 'transparent',
+    buttonBackgroundColorSelected: '#94C269',
+    buttonBackgroundColor: '#EBEBEB',
     blueGray: '#98AFC7',
 }
