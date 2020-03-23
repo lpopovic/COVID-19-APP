@@ -120,12 +120,12 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     apiCallOnChangeRegionHandler = (region) => {
-
+        
         const radius = getRadiusFromRegion(region)
-
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 if (res.length > 0) {
+                    
                     this.setNewStateHandler({
                         points: res,
                     })
@@ -165,7 +165,7 @@ class MapScreen extends BaseScreen {
                 }, pauseTimeOutListener);
             }
         } else {
-            //  this._firstTimeInitialMap = true
+             this._firstTimeInitialMap = true
         }
 
     }
