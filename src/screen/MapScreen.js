@@ -234,17 +234,9 @@ class MapScreen extends BaseScreen {
                         this.userLocationMarker(userLocation)
                         : null}
                     {userPoints.map((point, index) => {
-
-                        return (
-                            <MapView.Marker
-                                key={index}
-                                coordinate={point}
-                                title={`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}
-                                pinColor={'blue'}
-                                onPress={() => this.onPressMarker(index)}
-                            />
-                        )
+                        return this.userInsertMarker(point, index)
                     })}
+
                 </MapView>
                 {this.typeMapBtn()}
                 {this.userLocationBtn()}
@@ -265,6 +257,47 @@ class MapScreen extends BaseScreen {
                         width: '100%',
                     }} />
             </TouchableOpacity>
+        )
+    }
+    userInsertMarker = (point, index) => {
+        return (
+            <MapView.Marker
+                key={index}
+                coordinate={point}
+                title={`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}
+                pinColor={'blue'}>
+                <MapView.Callout
+                    onPress={() => this.onPressMarker(index)}
+                    style={{ borderColor: BASE_COLOR.blueGray, borderWidth: 1 }}>
+                    <View style={{
+                        height: 80,
+                        width: 200,
+                        backgroundColor: BASE_COLOR.white,
+                        flex: 1,
+                    }}>
+                        <View style={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            alignContent: 'center',
+                        }}>
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            }}>{`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}</Text>
+                        </View>
+                        <View style={{
+                            justifyContent: 'center',
+                            alignContent: 'center',
+                            alignItems: 'center',
+                            flex: 1,
+                        }}>
+                            <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Izbrisati</Text>
+                            </View>
+                        </View>
+                    </View>
+                </MapView.Callout>
+            </MapView.Marker>
         )
     }
     changeTypeMapHandler = () => {
