@@ -264,7 +264,6 @@ class MapScreen extends BaseScreen {
             <MapView.Marker
                 key={index}
                 coordinate={point}
-                title={`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}
                 pinColor={'blue'}>
                 <MapView.Callout
                     onPress={() => this.onPressMarker(index)}
