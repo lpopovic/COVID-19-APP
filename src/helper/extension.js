@@ -1,7 +1,9 @@
-import { Platform } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
 import { zoomLevel } from './constant';
 
 export const isAndroid = Platform.OS === 'android' ? true : false
+
+
 export const getZoomRegion = (region) => {
     const zoom = Math.round(Math.log(360 / region.longitudeDelta) / Math.LN2)
     return zoom
@@ -56,7 +58,7 @@ export const getRadiusFromRegion = (region) => {
     minLongitude = longitude - longitudeDelta / 2;
     maxLongitude = longitude + longitudeDelta / 2;
 
-    const distane = distanceLocation(minLatitude, minLongitude, maxLatitude, maxLongitude,'K').toFixed(5) * 2
+    const distane = distanceLocation(minLatitude, minLongitude, maxLatitude, maxLongitude, 'K').toFixed(5) * 2
     // const test = zoomLevel[getZoomRegion(region) - 1] / 10000
     return distane
 }

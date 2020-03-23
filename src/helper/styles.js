@@ -1,5 +1,6 @@
 export const BASE_COLOR = {
     orange: '#F7A776',
+    green: '#94C269',
     darkOrange: '#F5723A',
     lightGray: '#BABABA',
     white: 'white',
@@ -10,4 +11,5 @@ export const BASE_COLOR = {
     buttonBackgroundColorSelected: '#94C269',
     buttonBackgroundColor: '#EBEBEB',
     blueGray: '#98AFC7',
+    red: "#E50000",
 }

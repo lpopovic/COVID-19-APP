@@ -6,9 +6,9 @@ export const showDefaultSnackBar = (text) => {
         data: text,
         position: WSnackBar.position.TOP, // 1.TOP 2.CENTER 3.BOTTOM
         duration: 1000, //1.SHORT 2.LONG 3.INDEFINITE
-        textColor: BASE_COLOR.black,
-        backgroundColor: BASE_COLOR.blueGray,
-        height: 50,
+        textColor: BASE_COLOR.white,
+        backgroundColor: BASE_COLOR.green,
+        height: 44,
     }
     WSnackBar.show(snackBarOpts)
 }

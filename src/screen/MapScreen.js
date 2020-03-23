@@ -22,6 +22,11 @@ import {
     getStorageData,
     STORAGE_KEY,
     distanceLocation,
+    zoomMarker,
+    latitudeDeltaMarker,
+    longitudeDeltaMarker,
+    latitudeDeltaInitial,
+    longitudeDeltaInitial,
 } from '../helper'
 import { TouchableOpacity as RNGHTouchableOpacity, TouchableNativeFeedback } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
@@ -31,13 +36,7 @@ import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
 import { iconAssets } from '../assets';
-const pauseTimeOutListener = 1000 //ms
-const zoom = 1
-const zoomMarker = 13
-const latitudeDeltaMarker = Math.exp(Math.log(360) - (zoomMarker * Math.LN2));
-const longitudeDeltaMarker = Dimensions.get('window').width / Dimensions.get('window').height * latitudeDeltaMarker
-const latitudeDeltaInitial = Math.exp(Math.log(360) - (zoom * Math.LN2));
-const longitudeDeltaInitial = Dimensions.get('window').width / Dimensions.get('window').height * latitudeDeltaInitial
+const pauseTimeOutListener = 2000 //ms
 let activeTimerOnChangeLocation = false
 
 
@@ -87,8 +86,9 @@ class MapScreen extends BaseScreen {
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 this.setNewStateHandler({
-                    points: res,
+                    points: [...res],
                     loading: false,
+
                 })
             },
             err => {
@@ -104,8 +104,9 @@ class MapScreen extends BaseScreen {
                 res => {
 
                     this.setNewStateHandler({
-                        userPoints: res,
+                        userPoints: [...res],
                     })
+
                 },
                 err => {
                     this.showAlertMessage(err)
@@ -129,7 +130,7 @@ class MapScreen extends BaseScreen {
                 if (res.length > 0) {
 
                     this.setNewStateHandler({
-                        points: res,
+                        points: [...res],
                     })
                 } else {
                     showDefaultSnackBar(customMessages.noNearbyFound)
