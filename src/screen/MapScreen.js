@@ -9,6 +9,7 @@ import {
     Dimensions,
     Image,
     Alert,
+    TouchableHighlight,
 } from 'react-native';
 import {
     getZoomRegion,
@@ -21,7 +22,7 @@ import {
     getStorageData,
     STORAGE_KEY,
 } from '../helper'
-import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
+import { TouchableOpacity as RNGHTouchableOpacity, TouchableNativeFeedback } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
 import TagsView from '../components/common/TagsView'
 import MapView, { PROVIDER_GOOGLE, Heatmap, Marker } from 'react-native-maps';
@@ -120,12 +121,12 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     apiCallOnChangeRegionHandler = (region) => {
-        
+
         const radius = getRadiusFromRegion(region)
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 if (res.length > 0) {
-                    
+
                     this.setNewStateHandler({
                         points: res,
                     })
@@ -143,7 +144,7 @@ class MapScreen extends BaseScreen {
     onPressLongMap = (e) => {
         const { region } = this.state
         const zoom = getZoomRegion(region)
-        if (zoom >= 9) {
+        if (zoom >= 5) {
             this.bottomSheet.snapTo(0)
             const onPressPoint = e.nativeEvent.coordinate
             this.setNewStateHandler({
@@ -156,7 +157,7 @@ class MapScreen extends BaseScreen {
     onRegionChange = (region) => {
         if (this._firstTimeInitialMap == true) {
             clearTimeout(this.onRegionChangeTimeOut)
-            this.setNewStateHandler({ currentRegion: region })
+            this.setNewStateHandler({ currentRegion: region, region })
             if (activeTimerOnChangeLocation === true) {
                 this.onRegionChangeTimeOut = setTimeout(() => {
                     const { currentRegion } = this.state
@@ -165,7 +166,7 @@ class MapScreen extends BaseScreen {
                 }, pauseTimeOutListener);
             }
         } else {
-             this._firstTimeInitialMap = true
+            this._firstTimeInitialMap = true
         }
 
     }
@@ -242,11 +243,8 @@ class MapScreen extends BaseScreen {
                                 pinColor={'blue'}
                                 onPress={() => this.onPressMarker(index)}
                             />
-
                         )
-
                     })}
-
                 </MapView>
                 {this.typeMapBtn()}
                 {this.userLocationBtn()}
