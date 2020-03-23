@@ -31,10 +31,11 @@ import { LocationNetwork } from '../service/api';
 import { iconAssets } from '../assets';
 const pauseTimeOutListener = 2000 //ms
 const zoom = 1
-const distanceDelta = Math.exp(Math.log(360) - (zoom * Math.LN2));
 const zoomMarker = 13
 const latitudeDeltaMarker = Math.exp(Math.log(360) - (zoomMarker * Math.LN2));
 const longitudeDeltaMarker = Dimensions.get('window').width / Dimensions.get('window').height * latitudeDeltaMarker
+const latitudeDeltaInitial = Math.exp(Math.log(360) - (zoom * Math.LN2));
+const longitudeDeltaInitial = Dimensions.get('window').width / Dimensions.get('window').height * latitudeDeltaInitial
 let activeTimerOnChangeLocation = false
 
 
@@ -44,6 +45,10 @@ class MapScreen extends BaseScreen {
     constructor(props) {
         super(props)
 
+        const latitude = 0
+        const longitude = 0
+        const latitudeDelta = latitudeDeltaInitial
+        const longitudeDelta = longitudeDeltaInitial
         this._firstTimeInitialMap = false
         this.state = {
             userPoints: [],
@@ -51,13 +56,10 @@ class MapScreen extends BaseScreen {
             currentMap: typeOfGoogleMap.standard,
             loading: true,
             region: {
-                latitude: 0,
-                longitude: 0,
-                latitudeDelta: distanceDelta,
-                longitudeDelta:
-                    Dimensions.get('window').width /
-                    Dimensions.get('window').height *
-                    distanceDelta
+                latitude,
+                longitude,
+                latitudeDelta,
+                longitudeDelta
             },
             changeTag1: 0,
             changeTag2: 0,
@@ -70,6 +72,7 @@ class MapScreen extends BaseScreen {
     componentDidMount() {
         super.componentDidMount()
         this.apiCallInitialHandler()
+        this.disableDetectChangeRegion()
     }
 
     componentWillUnmount() {
@@ -81,7 +84,6 @@ class MapScreen extends BaseScreen {
         const radius = getRadiusFromRegion(region)
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
-                this._firstTimeInitialMap = true
                 this.setNewStateHandler({
                     points: res,
                     loading: false,
@@ -92,8 +94,6 @@ class MapScreen extends BaseScreen {
                 this.setNewStateHandler({
                     loading: false,
                 })
-                this._firstTimeInitialMap = true
-
             }
         )
         const uuid = await getStorageData(STORAGE_KEY.UUID_APP)
@@ -136,7 +136,6 @@ class MapScreen extends BaseScreen {
             },
             err => {
                 this.showAlertMessage(err)
-                this._firstTimeInitialMap = true
 
             }
         )
@@ -157,7 +156,7 @@ class MapScreen extends BaseScreen {
     onRegionChange = (region) => {
         if (this._firstTimeInitialMap == true) {
             clearTimeout(this.onRegionChangeTimeOut)
-            this.setNewStateHandler({ region, currentRegion: region })
+            this.setNewStateHandler({ currentRegion: region })
             if (activeTimerOnChangeLocation === true) {
                 this.onRegionChangeTimeOut = setTimeout(() => {
                     const { currentRegion } = this.state
@@ -166,7 +165,7 @@ class MapScreen extends BaseScreen {
                 }, pauseTimeOutListener);
             }
         } else {
-            this._firstTimeInitialMap = true
+            //  this._firstTimeInitialMap = true
         }
 
     }
@@ -205,9 +204,8 @@ class MapScreen extends BaseScreen {
             )
         }
         const onPressCancelStatus = () => {
-            alert("Cancel")
         }
-        this.showDialogMessage(`Da li zelite da izbrisete lokaciju?`, onPressOkStatus, onPressCancelStatus)
+        this.showDialogMessage(customMessages.removeLocation, onPressOkStatus, onPressCancelStatus)
     }
     mapContent = () => {
         const { currentMap, region, points, userPoints } = this.state
@@ -400,7 +398,9 @@ class MapScreen extends BaseScreen {
         const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
         return (
             <View style={styles.mainContainer}>
+
                 {mainDisplay}
+
                 <BottomSheet
                     ref={ref => this.bottomSheet = ref}
                     snapPoints={[270, 0]}
