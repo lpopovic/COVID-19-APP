@@ -99,16 +99,16 @@ class LocationNetwork {
             let formData = {
                 latitude,
                 longitude,
-                uuid,
+                // uuid,
             }
-
             const url = RestUrl.deleteMyInsertLocation(uuid)
             try {
-                const { data } = await axios.delete(url, formData)
+                const { data } = await axios.post(url,formData)
 
                 resolve(String(data.message))
 
             } catch (error) {
+                alert(JSON.stringify(error))
                 try {
                     const { message } = error.response.data.error
                     reject(message)

@@ -7,7 +7,7 @@ class RestUrl {
     static postLocation = withKey(`points`)
     static getMoreLocations = (latitude, longitude, radius) => withKey(`points?latitude=${latitude}&longitude=${longitude}&radius=${radius}`)
     static getMyInsertLocations = (uuid) => withKey(`uuid/${uuid}/points`)
-    static deleteMyInsertLocation = (uuid) => withKey(`uuid/${uuid}/points`)
+    static deleteMyInsertLocation = (uuid) => withKey(`uuid/${uuid}/delete-point`)
 }
 
 export { RestUrl }

@@ -56,12 +56,12 @@ export const getRadiusFromRegion = (region) => {
     minLongitude = longitude - longitudeDelta / 2;
     maxLongitude = longitude + longitudeDelta / 2;
 
-    const distane = distance(minLatitude, minLongitude, maxLatitude, maxLongitude).toFixed(5) * 2 
+    const distane = distanceLocation(minLatitude, minLongitude, maxLatitude, maxLongitude,'K').toFixed(5) * 2
     // const test = zoomLevel[getZoomRegion(region) - 1] / 10000
     return distane
 }
 
-function distance(lat1, lon1, lat2, lon2, unit) {
+export const distanceLocation = (lat1, lon1, lat2, lon2, unit) => {
     if ((lat1 == lat2) && (lon1 == lon2)) {
         return 0;
     }
@@ -79,6 +79,6 @@ function distance(lat1, lon1, lat2, lon2, unit) {
         dist = dist * 60 * 1.1515;
         if (unit == "K") { dist = dist * 1.609344 }
         if (unit == "N") { dist = dist * 0.8684 }
-        return dist / 1.609344;
+        return dist;
     }
 }

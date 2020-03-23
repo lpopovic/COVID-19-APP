@@ -21,6 +21,7 @@ import {
     typeOfGoogleMap,
     getStorageData,
     STORAGE_KEY,
+    distanceLocation,
 } from '../helper'
 import { TouchableOpacity as RNGHTouchableOpacity, TouchableNativeFeedback } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
@@ -30,7 +31,7 @@ import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
 import { iconAssets } from '../assets';
-const pauseTimeOutListener = 2000 //ms
+const pauseTimeOutListener = 1000 //ms
 const zoom = 1
 const zoomMarker = 13
 const latitudeDeltaMarker = Math.exp(Math.log(360) - (zoomMarker * Math.LN2));
@@ -144,13 +145,30 @@ class MapScreen extends BaseScreen {
     onPressLongMap = (e) => {
         const { region } = this.state
         const zoom = getZoomRegion(region)
-        if (zoom >= 5) {
-            this.bottomSheet.snapTo(0)
-            const onPressPoint = e.nativeEvent.coordinate
-            this.setNewStateHandler({
-                onPressPoint
-            })
+
+        if (zoom >= zoomMarker) {
+            if (this.props.userLocation !== null) {
+                const radius = distanceLocation(this.props.userLocation.latitude, this.props.userLocation.longitude,
+                    e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude, 'K')
+                if (radius <= 10) {
+                    this.bottomSheet.snapTo(0)
+                    const onPressPoint = e.nativeEvent.coordinate
+                    this.setNewStateHandler({
+                        onPressPoint
+                    })
+                } else {
+                    showDefaultSnackBar(customMessages.inRadius)
+                    this.bottomSheet.snapTo(1)
+                    this.bottomSheet.snapTo(1)
+                }
+            } else {
+                this.bottomSheet.snapTo(1)
+                this.bottomSheet.snapTo(1)
+                this.props.requestUserLocation()
+            }
         } else {
+            this.bottomSheet.snapTo(1)
+            this.bottomSheet.snapTo(1)
             showDefaultSnackBar(customMessages.cantUseLocation)
         }
     }
@@ -194,7 +212,9 @@ class MapScreen extends BaseScreen {
                 return index != position;
 
             });
+
             this.setNewStateHandler({ userPoints })
+
             LocationNetwork.fetchDeleteRemovePoint(point).then(
                 res => {
                     showDefaultSnackBar(res)
@@ -262,7 +282,7 @@ class MapScreen extends BaseScreen {
     userInsertMarker = (point, index) => {
         return (
             <MapView.Marker
-                key={index}
+                key={`${index}`}
                 coordinate={point}
                 pinColor={'blue'}>
                 <MapView.Callout
