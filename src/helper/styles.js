@@ -10,6 +10,6 @@ export const BASE_COLOR = {
     transparent: 'transparent',
     buttonBackgroundColorSelected: '#94C269',
     buttonBackgroundColor: '#EBEBEB',
-    blueGray: '#98AFC7',
+    blueGray: '#98AFC7',  //'#4285F4'
     red: "#E50000",
 }

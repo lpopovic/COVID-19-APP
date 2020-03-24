@@ -43,7 +43,7 @@ class CustomMapView extends Component {
                     {points.length > 0 ?
                         <Heatmap
                             points={points}
-                            opacity={1}
+                            opacity={isAndroid ? 1 : 0.7}
                             radius={isAndroid ? 20 : 20}
                             gradient={heatMapGradient} />
 
@@ -165,18 +165,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     userMarkerWhite: {
-        backgroundColor: 'rgba(0, 0, 255, 1.0)',
-        borderRadius: 7.5,
+        backgroundColor: 'rgba(66, 133, 244, 1.0)',
+        borderRadius: 9,
         borderColor: BASE_COLOR.white,
         borderWidth: 2,
-        width: 15,
-        height: 15
+        width: 18,
+        height: 18
     },
     userMarkerBlue: {
-        width: 30,
-        height: 30,
-        borderRadius: 30 / 2,
-        backgroundColor: 'rgba(0, 0, 255, 0.3)',
+        width: 36,
+        height: 36,
+        borderRadius: 36 / 2,
+        backgroundColor: 'rgba(66, 133, 244, 0.3)',
         justifyContent: 'center',
         alignContent: 'center',
         alignItems: 'center'

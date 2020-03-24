@@ -16,7 +16,7 @@ class DefaultMarker extends Component {
             <MapView.Marker
                 key={`${index}`}
                 coordinate={point}
-                pinColor={'blue'}>
+                pinColor={BASE_COLOR.buttonBackgroundColorSelected}>
                 <MapView.Callout
                     onPress={() => this.props.onPressMarker(index)}>
                     <View style={styles.calloutContainer}>

@@ -56,7 +56,7 @@ class MapScreen extends BaseScreen {
             changeTag2: 0,
             tagListSelect1: true,
             tagListSelect2: true,
-            answer1: [{ name: 'Yes', id: 0 }],
+            answer1: [{ name: 'Da', id: 0 }],
             answer2: [{ name: 'No', id: 1 }],
         }
     }
