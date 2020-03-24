@@ -1,24 +1,16 @@
-import React, { Component } from 'react';
+import React from 'react';
 import {
     View,
-    SafeAreaView,
     Text,
     StyleSheet,
     TouchableOpacity,
-    Keyboard,
-    Dimensions,
-    Image,
-    Alert,
-    TouchableHighlight,
 } from 'react-native';
 import {
     getZoomRegion,
     isAndroid,
     BASE_COLOR,
-    heatMapGradient,
     customMessages,
     getRadiusFromRegion,
-    typeOfGoogleMap,
     getStorageData,
     STORAGE_KEY,
     distanceLocation,
@@ -28,17 +20,16 @@ import {
     latitudeDeltaInitial,
     longitudeDeltaInitial,
 } from '../helper'
-import { TouchableOpacity as RNGHTouchableOpacity, TouchableNativeFeedback } from "react-native-gesture-handler";
+import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
 import BottomSheet from 'reanimated-bottom-sheet'
 import TagsView from '../components/common/TagsView'
-import MapView, { PROVIDER_GOOGLE, Heatmap, Marker } from 'react-native-maps';
+import MapView from '../components/MapView/MapView'
 import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
 import { LocationNetwork } from '../service/api';
-import { iconAssets } from '../assets';
+
 const pauseTimeOutListener = 2000 //ms
 let activeTimerOnChangeLocation = false
-
 
 
 class MapScreen extends BaseScreen {
@@ -54,7 +45,6 @@ class MapScreen extends BaseScreen {
         this.state = {
             userPoints: [],
             points: [],
-            currentMap: typeOfGoogleMap.standard,
             loading: true,
             region: {
                 latitude,
@@ -79,7 +69,8 @@ class MapScreen extends BaseScreen {
     componentWillUnmount() {
         super.componentWillUnmount()
     }
-
+    // * START API CALL FUNC
+    // * api initial
     apiCallInitialHandler = async () => {
         const { region } = this.state
         const radius = getRadiusFromRegion(region)
@@ -114,21 +105,12 @@ class MapScreen extends BaseScreen {
             )
         }
     }
-    disableDetectChangeRegion = () => {
-        activeTimerOnChangeLocation = false
-        clearTimeout(this._activeTimerOnChangeLocation)
-        this._activeTimerOnChangeLocation = setTimeout(() => {
-            activeTimerOnChangeLocation = true
-
-        }, pauseTimeOutListener);
-    }
+    // * get new points by change region
     apiCallOnChangeRegionHandler = (region) => {
-
         const radius = getRadiusFromRegion(region)
         LocationNetwork.fetchGetPointsForRegion(region, radius).then(
             res => {
                 if (res.length > 0) {
-
                     this.setNewStateHandler({
                         points: [...res],
                     })
@@ -142,6 +124,44 @@ class MapScreen extends BaseScreen {
 
             }
         )
+    }
+    // * create new point
+    apiCallPostNewPoint = (point) => {
+        LocationNetwork.fetchPostCreateNewPoint(point).then(
+            res => {
+                const { userPoints } = this.state
+                userPoints.push(point)
+                this.setNewStateHandler({ userPoints, onPressPoint: null })
+                showDefaultSnackBar(res)
+            },
+            err => {
+                this.setNewStateHandler({ onPressPoint: null })
+                this.showAlertMessage(err)
+            }
+        )
+    }
+    // * delete point
+    apiCallDeletePoint = (point) => {
+        LocationNetwork.fetchDeleteRemovePoint(point).then(
+            res => {
+                showDefaultSnackBar(res)
+            },
+            err => {
+                this.showAlertMessage(err)
+            }
+        )
+    }
+    //* END API CALL FUNC
+
+    // * START MapViev COMPONENT
+    // * DEFINE MapView ACTION
+    disableDetectChangeRegion = () => {
+        activeTimerOnChangeLocation = false
+        clearTimeout(this._activeTimerOnChangeLocation)
+        this._activeTimerOnChangeLocation = setTimeout(() => {
+            activeTimerOnChangeLocation = true
+
+        }, pauseTimeOutListener);
     }
     onPressLongMap = (e) => {
         const { region } = this.state
@@ -191,7 +211,7 @@ class MapScreen extends BaseScreen {
     }
     showUserLocationHandler = () => {
         if (this.props.userLocation !== null) {
-            this._map.animateToRegion(
+            this._mapView.getInnerRef().animateToRegion(
                 {
                     ...this.props.userLocation,
                     latitudeDelta: latitudeDeltaMarker,
@@ -205,171 +225,35 @@ class MapScreen extends BaseScreen {
     }
     onPressMarker = (position) => {
         let { userPoints } = this.state
-
         const onPressOkStatus = () => {
             const point = userPoints[position]
             userPoints = userPoints.filter(function (value, index, arr) {
-
                 return index != position;
-
             });
-
             this.setNewStateHandler({ userPoints })
-
-            LocationNetwork.fetchDeleteRemovePoint(point).then(
-                res => {
-                    showDefaultSnackBar(res)
-                },
-                err => {
-                    this.showAlertMessage(err)
-                }
-            )
+            this.apiCallDeletePoint(point)
         }
-        const onPressCancelStatus = () => {
-        }
-        this.showDialogMessage(customMessages.removeLocation, onPressOkStatus, onPressCancelStatus)
+        this.showDialogMessage(customMessages.removeLocation, onPressOkStatus)
     }
+    // * DEFINE MapView LAYOUT
     mapContent = () => {
-        const { currentMap, region, points, userPoints } = this.state
+        const { region, points, userPoints } = this.state
         const { userLocation } = this.props
         return (
-            <View style={styles.mapContainer}>
-                <MapView
-                    mapType={currentMap}
-                    ref={component => this._map = component}
-                    provider={PROVIDER_GOOGLE}
-                    style={styles.map}
-                    initialRegion={region}
-                    onLongPress={e => this.onPressLongMap(e)}
-                    onRegionChangeComplete={this.onRegionChange}
-                    onTouchStart={Keyboard.dismiss}>
-                    {points.length > 0 ?
-                        <Heatmap
-                            points={points}
-                            opacity={1}
-                            radius={isAndroid ? 20 : 20}
-                            gradient={heatMapGradient} />
-
-                        : null}
-                    {userLocation != null ?
-                        this.userLocationMarker(userLocation)
-                        : null}
-                    {userPoints.map((point, index) => {
-                        return this.userInsertMarker(point, index)
-                    })}
-
-                </MapView>
-                {this.typeMapBtn()}
-                {this.userLocationBtn()}
-            </View >
+            <MapView
+                ref={component => this._mapView = component}
+                userLocation={userLocation}
+                region={region}
+                points={points}
+                userPoints={userPoints}
+                onRegionChange={this.onRegionChange}
+                onPressLongMap={e => this.onPressLongMap(e)}
+                showUserLocationHandler={() => this.showUserLocationHandler()}
+                onPressMarker={(index) => this.onPressMarker(index)}
+            />
         )
     }
-    userLocationBtn = () => {
-        return (
-            <TouchableOpacity
-                onPress={() => this.showUserLocationHandler()}
-                style={styles.userLocationBtnContainer}>
-                <Image
-                    source={iconAssets.targetIcon}
-                    resizeMode={'contain'}
-                    style={{
-                        tintColor: BASE_COLOR.blueGray,
-                        height: '100%',
-                        width: '100%',
-                    }} />
-            </TouchableOpacity>
-        )
-    }
-    userInsertMarker = (point, index) => {
-        return (
-            <MapView.Marker
-                key={`${index}`}
-                coordinate={point}
-                pinColor={'blue'}>
-                <MapView.Callout
-                    onPress={() => this.onPressMarker(index)}
-                    style={{ borderColor: BASE_COLOR.blueGray, borderWidth: 1 }}>
-                    <View style={{
-                        height: 80,
-                        width: 200,
-                        backgroundColor: BASE_COLOR.white,
-                        flex: 1,
-                    }}>
-                        <View style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            alignContent: 'center',
-                        }}>
-                            <Text style={{
-                                fontSize: 18,
-                                fontWeight: 'bold'
-                            }}>{`${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`}</Text>
-                        </View>
-                        <View style={{
-                            justifyContent: 'center',
-                            alignContent: 'center',
-                            alignItems: 'center',
-                            flex: 1,
-                        }}>
-                            <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                                <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Izbrisati</Text>
-                            </View>
-                        </View>
-                    </View>
-                </MapView.Callout>
-            </MapView.Marker>
-        )
-    }
-    changeTypeMapHandler = () => {
-        const currentMap = this.state.currentMap == typeOfGoogleMap.standard ? typeOfGoogleMap.satellite : typeOfGoogleMap.standard
-        this.setNewStateHandler({
-            currentMap
-        })
-    }
-    typeMapBtn = () => {
-        const icon = this.state.currentMap == typeOfGoogleMap.standard ? iconAssets.satelliteMapIcon : iconAssets.standardMapIcon
-        return (
-            <TouchableOpacity
-                onPress={() => this.changeTypeMapHandler()}
-                style={styles.typeMapBtnContainer}>
-                <Image
-                    source={icon}
-                    resizeMode={'contain'}
-                    style={{
-                        height: '100%',
-                        width: '100%',
-                    }} />
-            </TouchableOpacity>
-        )
-    }
-    userLocationMarker = (coordinate) => {
-        return (
-            <Marker coordinate={coordinate} title={'JA'}>
-                <View style={[{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 30 / 2,
-                    backgroundColor: 'rgba(0, 0, 255, 0.3)',
-                    justifyContent: 'center',
-                    alignContent: 'center',
-                    alignItems: 'center'
-                }]}>
-                    <View style={{
-                        backgroundColor: 'rgba(0, 0, 255, 1.0)',
-                        borderRadius: 7.5,
-                        borderColor: BASE_COLOR.white,
-                        borderWidth: 2,
-                        width: 15,
-                        height: 15
-                    }}>
-                    </View>
-
-                </View>
-
-            </Marker>
-        )
-    }
-
+    // * END MapView COMPONENT
     onSelectTagView1 = (answer1, tagListSelect1) => {
         const changeTag1 = this.state.changeTag1 === 0 ? 1 : 0
         this.setState({ answer1, tagListSelect1, changeTag1 })
@@ -382,18 +266,7 @@ class MapScreen extends BaseScreen {
         const { onPressPoint } = this.state
         this.bottomSheet.snapTo(1)
         this.bottomSheet.snapTo(1)
-        LocationNetwork.fetchPostCreateNewPoint(onPressPoint).then(
-            res => {
-                const { userPoints } = this.state
-                userPoints.push(onPressPoint)
-                this.setNewStateHandler({ userPoints, onPressPoint: null })
-                showDefaultSnackBar(res)
-            },
-            err => {
-                this.setNewStateHandler({ onPressPoint: null })
-                this.showAlertMessage(err)
-            }
-        )
+        this.apiCallPostNewPoint(onPressPoint)
 
     }
     renderContent = () => (
@@ -468,29 +341,13 @@ class MapScreen extends BaseScreen {
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: 'white'
-    },
-    headerContainer: {
-        height: 50,
+        backgroundColor: BASE_COLOR.white
     },
     mapContainer: {
         flex: 1
     },
     map: {
         flex: 1,
-    },
-    lineShadowView: {
-        height: 1,
-        width: '100%',
-        backgroundColor: BASE_COLOR.black,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 1.90,
-        shadowRadius: 4.5,
-        elevation: 8,
     },
     header: {
         backgroundColor: 'white',
@@ -508,28 +365,6 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         backgroundColor: '#00000040',
         marginBottom: 10,
-    },
-    headerAlignItems: {
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexDirection: 'row',
-        flex: 1,
-    },
-    btnCountry: {
-        flexDirection: 'row',
-        padding: 4,
-        borderColor: 'black',
-        borderWidth: 1,
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignContent: 'center',
-        backgroundColor: BASE_COLOR.darkOrange,
-        width: 170,
-        margin: 8
-    },
-    btnTitle: {
-        fontWeight: 'bold',
-        fontSize: 18,
     },
     userLocationBtnContainer: {
         backgroundColor: BASE_COLOR.white,
