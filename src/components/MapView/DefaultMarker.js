@@ -27,16 +27,6 @@ class DefaultMarker extends Component {
                             <Text style={styles.coordinateText}>{coordinateText}</Text>
                         </View>
                         <View style={styles.infoContainer}>
-                            <View style={styles.questionContainer}>
-                                <>
-                                    <Text style={styles.questionText}>{positiveForViruseText}</Text>
-                                    <Text style={styles.questionText}>{answerPositiveForViruseText}</Text>
-                                </>
-                                <>
-                                    <Text style={styles.questionText}>{havingSymptomsText}</Text>
-                                    <Text style={styles.questionText}>{answerHavingSymptomsText}</Text>
-                                </>
-                            </View>
                             <View style={styles.removeBtnContainer}>
                                 <Text style={styles.questionText}>Remove</Text>
                             </View>
@@ -57,7 +47,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     calloutContainer: {
-        height: 170,
+        height: 80,
         width: 200,
         backgroundColor: BASE_COLOR.white,
         flex: 1,
@@ -66,7 +56,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         alignContent: 'center',
-        flex: 0.2,
+        flex: 0.3,
     },
     coordinateText: {
         fontSize: 18,
