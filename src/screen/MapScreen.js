@@ -366,38 +366,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#00000040',
         marginBottom: 10,
     },
-    userLocationBtnContainer: {
-        backgroundColor: BASE_COLOR.white,
-        borderWidth: 1,
-        borderColor: BASE_COLOR.blueGray,
-        position: 'absolute',
-        right: 0,
-        bottom: isAndroid ? 0 : 44,
-        margin: 8,
-        height: 40,
-        width: 40,
-        borderRadius: 20,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignContent: 'center',
-        alignItems: 'center',
-        padding: 8,
-    },
-    typeMapBtnContainer: {
-        backgroundColor: BASE_COLOR.white,
-        borderWidth: 1,
-        borderColor: BASE_COLOR.blueGray,
-        position: 'absolute',
-        top: isAndroid ? undefined : 44,
-        right: 0,
-        margin: 8,
-        height: 40,
-        width: 40,
-        overflow: 'hidden',
-        justifyContent: 'center',
-        alignContent: 'center',
-        alignItems: 'center',
-    }
 });
 
 
