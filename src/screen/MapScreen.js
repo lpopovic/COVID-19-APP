@@ -240,17 +240,19 @@ class MapScreen extends BaseScreen {
         const { region, points, userPoints } = this.state
         const { userLocation } = this.props
         return (
-            <MapView
-                ref={component => this._mapView = component}
-                userLocation={userLocation}
-                region={region}
-                points={points}
-                userPoints={userPoints}
-                onRegionChange={this.onRegionChange}
-                onPressLongMap={e => this.onPressLongMap(e)}
-                showUserLocationHandler={() => this.showUserLocationHandler()}
-                onPressMarker={(index) => this.onPressMarker(index)}
-            />
+            <View style={styles.mapContainer}>
+                <MapView
+                    ref={component => this._mapView = component}
+                    userLocation={userLocation}
+                    region={region}
+                    points={points}
+                    userPoints={userPoints}
+                    onRegionChange={this.onRegionChange}
+                    onPressLongMap={e => this.onPressLongMap(e)}
+                    showUserLocationHandler={() => this.showUserLocationHandler()}
+                    onPressMarker={(index) => this.onPressMarker(index)}
+                />
+            </View>
         )
     }
     // * END MapView COMPONENT
@@ -345,9 +347,6 @@ const styles = StyleSheet.create({
     },
     mapContainer: {
         flex: 1
-    },
-    map: {
-        flex: 1,
     },
     header: {
         backgroundColor: 'white',
