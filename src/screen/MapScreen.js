@@ -132,7 +132,7 @@ class MapScreen extends BaseScreen {
                 const { userPoints } = this.state
                 userPoints.push(point)
                 this.setNewStateHandler({ userPoints, onPressPoint: null })
-                showDefaultSnackBar(res)
+                showDefaultSnackBar(customMessages.locationSaved)
             },
             err => {
                 this.setNewStateHandler({ onPressPoint: null })
@@ -144,7 +144,7 @@ class MapScreen extends BaseScreen {
     apiCallDeletePoint = (point) => {
         LocationNetwork.fetchDeleteRemovePoint(point).then(
             res => {
-                showDefaultSnackBar(res)
+                showDefaultSnackBar(customMessages.locationRemoved)
             },
             err => {
                 this.showAlertMessage(err)
@@ -273,36 +273,25 @@ class MapScreen extends BaseScreen {
     }
     renderContent = () => (
         <View style={{ backgroundColor: 'white', paddingBottom: 55 }}>
-            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>Have you tested positive for the Corona Virus?</Text>
+            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>Da li na ovoj lokaciji ima zaraženih?</Text>
             <View style={{ height: 50 }}>
                 <TagsView
                     extraData={this.state.changeTag1}
-                    arrayAllItems={[{ name: 'Yes', id: 0 }, { name: 'No', id: 1 }, { name: 'Pending', id: 2 }, { name: 'Not Tested', id: 3 }]}
+                    arrayAllItems={[{ name: 'Da', id: 0 }, { name: 'Ne', id: 1 }, { name: 'Nisam siguran/na', id: 2 }]}
                     selected={this.state.answer1}
                     isExclusive={true}
                     selectedItem={(select) => this.onSelectTagView1(select, true)}
                     isSelectedOther={this.state.tagListSelect1}
                 />
             </View>
-            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }} >Are you having symptoms?</Text>
-            <View style={{ height: 50 }}>
-                <TagsView
-                    extraData={this.state.changeTag2}
-                    arrayAllItems={[{ name: 'Yes', id: 0 }, { name: 'No', id: 1 }]}
-                    selected={this.state.answer2}
-                    isExclusive={true}
-                    selectedItem={(select) => this.onSelectTagView2(select, true)}
-                    isSelectedOther={this.state.tagListSelect2}
-                />
-            </View>
             {isAndroid ?
-                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => this.onPressSubmit()}>
+                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Prijavi</Text>
                     </View>
                 </RNGHTouchableOpacity>
                 :
-                <TouchableOpacity style={{ alignItems: 'center', top: 10 }} onPress={() => this.onPressSubmit()}>
+                <TouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
                         <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
                     </View>
@@ -329,7 +318,7 @@ class MapScreen extends BaseScreen {
 
                 <BottomSheet
                     ref={ref => this.bottomSheet = ref}
-                    snapPoints={[270, 0]}
+                    snapPoints={[200, 0]}
                     renderContent={this.renderContent}
                     renderHeader={this.renderHeader}
                     enabledInnerScrolling={false}

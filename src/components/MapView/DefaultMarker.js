@@ -11,10 +11,7 @@ class DefaultMarker extends Component {
     userInsertMarker = (point, index) => {
 
         const coordinateText = `${Math.round(point.latitude * 100) / 100}°N, ${Math.round(point.longitude * 100) / 100}°E`
-        const positiveForViruseText = 'Positive for viruse?'
-        const answerPositiveForViruseText = 'Not tested'
-        const havingSymptomsText = 'Having symptoms?'
-        const answerHavingSymptomsText = 'Yes'
+
         return (
             <MapView.Marker
                 key={`${index}`}
@@ -28,7 +25,7 @@ class DefaultMarker extends Component {
                         </View>
                         <View style={styles.infoContainer}>
                             <View style={styles.removeBtnContainer}>
-                                <Text style={styles.questionText}>Remove</Text>
+                                <Text style={styles.questionText}>Ukloni</Text>
                             </View>
                         </View>
                     </View>
