@@ -287,13 +287,13 @@ class MapScreen extends BaseScreen {
             {isAndroid ?
                 <RNGHTouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Prijavi</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>{strings.report}</Text>
                     </View>
                 </RNGHTouchableOpacity>
                 :
                 <TouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
                     <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>Report</Text>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>{strings.report}</Text>
                     </View>
                 </TouchableOpacity>
             }
