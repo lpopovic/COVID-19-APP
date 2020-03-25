@@ -16,7 +16,7 @@ class DefaultMarker extends Component {
         return (
             <MapView.Marker
                 key={`${index}`}
-                image={iconAssets.markerMapIcon128}
+                // image={iconAssets.markerMapIcon128}
                 pinColor={'red'}
                 coordinate={point} >
                     <MapView.Callout
