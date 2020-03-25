@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 import MapScreen from './src/screen/MapScreen'
 import Geolocation from '@react-native-community/geolocation';
 import CustomActivityIndicator from './src/components/common/CustomActivityIndicator'
-import { BASE_COLOR, customMessages } from './src/helper';
+import { BASE_COLOR, strings } from './src/helper';
 import CustomAlert from './src/components/common/CustomAlert';
 class App extends Component {
   state = {
@@ -38,7 +38,7 @@ class App extends Component {
         };
         this.setState({ initialPosition, loading: false });
       },
-      error => { CustomAlert.showAlert(customMessages.acsessLocation), this.setState({ loading: false }) },
+      error => { CustomAlert.showAlert(strings.acsessLocation), this.setState({ loading: false }) },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
   }

@@ -9,7 +9,7 @@ import {
     getZoomRegion,
     isAndroid,
     BASE_COLOR,
-    customMessages,
+    strings,
     getRadiusFromRegion,
     getStorageData,
     STORAGE_KEY,
@@ -115,7 +115,7 @@ class MapScreen extends BaseScreen {
                         points: [...res],
                     })
                 } else {
-                    showDefaultSnackBar(customMessages.noNearbyFound)
+                    showDefaultSnackBar(strings.noNearbyFound)
                 }
 
             },
@@ -132,7 +132,7 @@ class MapScreen extends BaseScreen {
                 const { userPoints } = this.state
                 userPoints.push(point)
                 this.setNewStateHandler({ userPoints, onPressPoint: null })
-                showDefaultSnackBar(customMessages.locationSaved)
+                showDefaultSnackBar(strings.locationSaved)
             },
             err => {
                 this.setNewStateHandler({ onPressPoint: null })
@@ -144,7 +144,7 @@ class MapScreen extends BaseScreen {
     apiCallDeletePoint = (point) => {
         LocationNetwork.fetchDeleteRemovePoint(point).then(
             res => {
-                showDefaultSnackBar(customMessages.locationRemoved)
+                showDefaultSnackBar(strings.locationRemoved)
             },
             err => {
                 this.showAlertMessage(err)
@@ -178,7 +178,7 @@ class MapScreen extends BaseScreen {
                         onPressPoint
                     })
                 } else {
-                    showDefaultSnackBar(customMessages.inRadius)
+                    showDefaultSnackBar(strings.inRadius)
                     this.bottomSheet.snapTo(1)
                     this.bottomSheet.snapTo(1)
                 }
@@ -190,7 +190,7 @@ class MapScreen extends BaseScreen {
         } else {
             this.bottomSheet.snapTo(1)
             this.bottomSheet.snapTo(1)
-            showDefaultSnackBar(customMessages.cantUseLocation)
+            showDefaultSnackBar(strings.cantUseLocation)
         }
     }
     onRegionChange = (region) => {
@@ -233,7 +233,7 @@ class MapScreen extends BaseScreen {
             this.setNewStateHandler({ userPoints })
             this.apiCallDeletePoint(point)
         }
-        this.showDialogMessage(customMessages.removeLocation, onPressOkStatus)
+        this.showDialogMessage(strings.removeLocation, onPressOkStatus)
     }
     // * DEFINE MapView LAYOUT
     mapContent = () => {
@@ -273,11 +273,11 @@ class MapScreen extends BaseScreen {
     }
     renderContent = () => (
         <View style={{ backgroundColor: 'white', paddingBottom: 55 }}>
-            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>Da li na ovoj lokaciji ima zaraženih?</Text>
+            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>{strings.theQuestion}</Text>
             <View style={{ height: 50 }}>
                 <TagsView
                     extraData={this.state.changeTag1}
-                    arrayAllItems={[{ name: 'Da', id: 0 }, { name: 'Ne', id: 1 }, { name: 'Nisam siguran/na', id: 2 }]}
+                    arrayAllItems={[{ name: strings.yes, id: 0 }, { name: strings.no, id: 1 }, { name: strings.notSure, id: 2 }]}
                     selected={this.state.answer1}
                     isExclusive={true}
                     selectedItem={(select) => this.onSelectTagView1(select, true)}

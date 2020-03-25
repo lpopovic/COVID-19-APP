@@ -1,7 +1,7 @@
 import axios from '../axios'
 import { RestUrl } from './url'
 import { Location } from '../../model/location';
-import { STORAGE_KEY, getStorageData, saveStorageData } from '../../helper'
+import { STORAGE_KEY, getStorageData, saveStorageData, strings } from '../../helper'
 class LocationNetwork {
 
     static fetchGetPointsForRegion = (region, radius) =>
@@ -21,13 +21,14 @@ class LocationNetwork {
 
 
             } catch (error) {
-                try {
-                    const { message } = error.response.data.error
-                    reject(message)
-                } catch  {
-                    reject(error.message)
+                resolve(strings.errorText)
+                // try {
+                //     const { message } = error.response.data.error
+                //     reject(message)
+                // } catch  {
+                //     reject(error.message)
 
-                }
+                // }
             }
         });
 
@@ -43,13 +44,14 @@ class LocationNetwork {
                 resolve(object)
 
             } catch (error) {
-                try {
-                    const { message } = error.response.data.error
-                    reject(message)
-                } catch  {
-                    reject(error.message)
+                resolve(strings.errorText)
+                // try {
+                //     const { message } = error.response.data.error
+                //     reject(message)
+                // } catch  {
+                //     reject(error.message)
 
-                }
+                // }
             }
         });
     static fetchPostCreateNewPoint = (coordinate) =>
@@ -81,13 +83,14 @@ class LocationNetwork {
                 resolve(String(data.message))
 
             } catch (error) {
-                try {
-                    const { message } = error.response.data.error
-                    reject(message)
-                } catch  {
-                    reject(error.message)
+                resolve(strings.errorText)
+                // try {
+                //     const { message } = error.response.data.error
+                //     reject(message)
+                // } catch  {
+                //     reject(error.message)
 
-                }
+                // }
             }
         });
     static fetchDeleteRemovePoint = (coordinate) =>
@@ -108,14 +111,14 @@ class LocationNetwork {
                 resolve(String(data.message))
 
             } catch (error) {
-                alert(JSON.stringify(error))
-                try {
-                    const { message } = error.response.data.error
-                    reject(message)
-                } catch  {
-                    reject(error.message)
+                // try {
+                //     const { message } = error.response.data.error
+                //     reject(message)
+                // } catch  {
+                //     reject(error.message)
 
-                }
+                // }
+                resolve(strings.errorText)
             }
         });
 }

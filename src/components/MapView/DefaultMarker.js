@@ -5,7 +5,8 @@ import {
     StyleSheet
 } from 'react-native';
 import MapView from 'react-native-maps'
-import { BASE_COLOR } from '../../helper'
+import { BASE_COLOR, strings } from '../../helper'
+import { iconAssets } from '../../assets';
 class DefaultMarker extends Component {
 
     userInsertMarker = (point, index) => {
@@ -15,21 +16,22 @@ class DefaultMarker extends Component {
         return (
             <MapView.Marker
                 key={`${index}`}
-                coordinate={point}
-                pinColor={BASE_COLOR.buttonBackgroundColorSelected}>
-                <MapView.Callout
-                    onPress={() => this.props.onPressMarker(index)}>
-                    <View style={styles.calloutContainer}>
-                        <View style={styles.coordinateContainer}>
-                            <Text style={styles.coordinateText}>{coordinateText}</Text>
-                        </View>
-                        <View style={styles.infoContainer}>
-                            <View style={styles.removeBtnContainer}>
-                                <Text style={styles.questionText}>Ukloni</Text>
+                image={iconAssets.markerMapIcon128}
+                pinColor={'red'}
+                coordinate={point} >
+                    <MapView.Callout
+                        onPress={() => this.props.onPressMarker(index)}>
+                        <View style={styles.calloutContainer}>
+                            <View style={styles.coordinateContainer}>
+                                <Text style={styles.coordinateText}>{coordinateText}</Text>
+                            </View>
+                            <View style={styles.infoContainer}>
+                                <View style={styles.removeBtnContainer}>
+                                    <Text style={styles.questionText}>{strings.remove}</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </MapView.Callout>
+                    </MapView.Callout>
             </MapView.Marker>
         )
     }
