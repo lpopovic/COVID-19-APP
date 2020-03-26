@@ -13,3 +13,6 @@ export const BASE_COLOR = {
     blueGray: '#98AFC7',  //'#4285F4'
     red: "#E50000",
 }
+export const CUSTOM_COLOR = {
+    btnColor: "#447385"
+}

@@ -5,7 +5,11 @@ import {
     StyleSheet
 } from 'react-native';
 import MapView from 'react-native-maps'
-import { BASE_COLOR, strings } from '../../helper'
+import {
+    BASE_COLOR,
+    strings,
+    CUSTOM_COLOR
+} from '../../helper'
 import { iconAssets } from '../../assets';
 class DefaultMarker extends Component {
 
@@ -19,19 +23,19 @@ class DefaultMarker extends Component {
                 // image={iconAssets.markerMapIcon128}
                 pinColor={'red'}
                 coordinate={point} >
-                    <MapView.Callout
-                        onPress={() => this.props.onPressMarker(index)}>
-                        <View style={styles.calloutContainer}>
-                            <View style={styles.coordinateContainer}>
-                                <Text style={styles.coordinateText}>{coordinateText}</Text>
-                            </View>
-                            <View style={styles.infoContainer}>
-                                <View style={styles.removeBtnContainer}>
-                                    <Text style={styles.questionText}>{strings.remove}</Text>
-                                </View>
+                <MapView.Callout
+                    onPress={() => this.props.onPressMarker(index)}>
+                    <View style={styles.calloutContainer}>
+                        <View style={styles.coordinateContainer}>
+                            <Text style={styles.coordinateText}>{coordinateText}</Text>
+                        </View>
+                        <View style={styles.infoContainer}>
+                            <View style={styles.removeBtnContainer}>
+                                <Text style={styles.questionText}>{strings.remove}</Text>
                             </View>
                         </View>
-                    </MapView.Callout>
+                    </View>
+                </MapView.Callout>
             </MapView.Marker>
         )
     }
@@ -82,7 +86,7 @@ const styles = StyleSheet.create({
         color: BASE_COLOR.white
     },
     removeBtnContainer: {
-        backgroundColor: '#447385',
+        backgroundColor: CUSTOM_COLOR.btnColor,
         height: 40,
         width: '70%',
         alignItems: 'center',

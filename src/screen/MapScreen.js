@@ -20,9 +20,7 @@ import {
     latitudeDeltaInitial,
     longitudeDeltaInitial,
 } from '../helper'
-import { TouchableOpacity as RNGHTouchableOpacity } from "react-native-gesture-handler";
-import BottomSheet from 'reanimated-bottom-sheet'
-import TagsView from '../components/common/TagsView'
+import BottomSheet from '../components/BottomSheet/BottomSheet'
 import MapView from '../components/MapView/MapView'
 import BaseScreen from './BaseScreen';
 import { showDefaultSnackBar } from '../components/common/CustomSnackBar'
@@ -52,12 +50,6 @@ class MapScreen extends BaseScreen {
                 latitudeDelta,
                 longitudeDelta
             },
-            changeTag1: 0,
-            changeTag2: 0,
-            tagListSelect1: true,
-            tagListSelect2: true,
-            answer1: [{ name: 'Da', id: 0 }],
-            answer2: [{ name: 'No', id: 1 }],
         }
     }
     componentDidMount() {
@@ -172,24 +164,24 @@ class MapScreen extends BaseScreen {
                 const radius = distanceLocation(this.props.userLocation.latitude, this.props.userLocation.longitude,
                     e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude, 'K')
                 if (radius <= 10) {
-                    this.bottomSheet.snapTo(0)
+                    this.bottomSheet.getInnerRef().snapTo(0)
                     const onPressPoint = e.nativeEvent.coordinate
                     this.setNewStateHandler({
                         onPressPoint
                     })
                 } else {
                     showDefaultSnackBar(strings.inRadius)
-                    this.bottomSheet.snapTo(1)
-                    this.bottomSheet.snapTo(1)
+                    this.bottomSheet.getInnerRef().snapTo(1)
+                    this.bottomSheet.getInnerRef().snapTo(1)
                 }
             } else {
-                this.bottomSheet.snapTo(1)
-                this.bottomSheet.snapTo(1)
+                this.bottomSheet.getInnerRef().snapTo(1)
+                this.bottomSheet.getInnerRef().snapTo(1)
                 this.props.requestUserLocation()
             }
         } else {
-            this.bottomSheet.snapTo(1)
-            this.bottomSheet.snapTo(1)
+            this.bottomSheet.getInnerRef().snapTo(1)
+            this.bottomSheet.getInnerRef().snapTo(1)
             showDefaultSnackBar(strings.cantUseLocation)
         }
     }
@@ -256,58 +248,24 @@ class MapScreen extends BaseScreen {
         )
     }
     // * END MapView COMPONENT
-    onSelectTagView1 = (answer1, tagListSelect1) => {
-        const changeTag1 = this.state.changeTag1 === 0 ? 1 : 0
-        this.setState({ answer1, tagListSelect1, changeTag1 })
-    }
-    onSelectTagView2 = (answer2, tagListSelect2) => {
-        const changeTag2 = this.state.changeTag2 === 0 ? 1 : 0
-        this.setState({ answer2, tagListSelect2, changeTag2 })
-    }
+    // * START BottomSheet COMPONENT
+    // * DEFINE BottomSheet ACTION
     onPressSubmit = () => {
         const { onPressPoint } = this.state
-        this.bottomSheet.snapTo(1)
-        this.bottomSheet.snapTo(1)
         this.apiCallPostNewPoint(onPressPoint)
 
     }
-    renderContent = () => (
-        <View style={{ backgroundColor: 'white', paddingBottom: 55 }}>
-            <Text style={{ fontWeight: '500', margin: 10, marginBottom: 2 }}>{strings.theQuestion}</Text>
-            <View style={{ height: 50 }}>
-                <TagsView
-                    extraData={this.state.changeTag1}
-                    arrayAllItems={[{ name: strings.yes, id: 0 }, { name: strings.no, id: 1 }, { name: strings.notSure, id: 2 }]}
-                    selected={this.state.answer1}
-                    isExclusive={true}
-                    selectedItem={(select) => this.onSelectTagView1(select, true)}
-                    isSelectedOther={this.state.tagListSelect1}
-                />
-            </View>
-            {isAndroid ?
-                <RNGHTouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
-                    <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>{strings.report}</Text>
-                    </View>
-                </RNGHTouchableOpacity>
-                :
-                <TouchableOpacity style={{ alignItems: 'center', top: 20 }} onPress={() => this.onPressSubmit()}>
-                    <View style={{ backgroundColor: '#447385', height: 50, width: '70%', alignItems: 'center', justifyContent: 'center', borderRadius: 10 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: 'white' }}>{strings.report}</Text>
-                    </View>
-                </TouchableOpacity>
-            }
-        </View>
-    )
+    // * DEFINE BottomSheet LAYOUT
+    sheetContent = () => {
+        return (
+            <BottomSheet
+                ref={component => this.bottomSheet = component}
+                onPressSubmit={() => this.onPressSubmit()}
 
-    renderHeader = () => (
-        <View style={styles.header}>
-            <View style={styles.panelHeader}>
-                <View style={styles.panelHandle} />
-            </View>
-        </View>
-    )
-
+            />
+        )
+    }
+    // * END BottomSheet COMPONENT
     render() {
         const { loading } = this.state
         const mainDisplay = loading ? this.activityIndicatorContent(BASE_COLOR.black) : this.mapContent()
@@ -315,15 +273,7 @@ class MapScreen extends BaseScreen {
             <View style={styles.mainContainer}>
 
                 {mainDisplay}
-
-                <BottomSheet
-                    ref={ref => this.bottomSheet = ref}
-                    snapPoints={[200, 0]}
-                    renderContent={this.renderContent}
-                    renderHeader={this.renderHeader}
-                    enabledInnerScrolling={false}
-                    initialSnap={1}
-                />
+                {this.sheetContent()}
             </View>
         )
     }
@@ -337,24 +287,6 @@ const styles = StyleSheet.create({
     mapContainer: {
         flex: 1
     },
-    header: {
-        backgroundColor: 'white',
-        shadowColor: '#000000',
-        paddingTop: 10,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
-    panelHeader: {
-        alignItems: 'center',
-    },
-    panelHandle: {
-        width: 40,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#00000040',
-        marginBottom: 10,
-    },
 });
-
 
 export default MapScreen;
