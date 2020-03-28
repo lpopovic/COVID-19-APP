@@ -13,7 +13,8 @@ const sr = {
     notSure: 'Nisam siguran/na',
     errorText: 'Nešto nije u redu. Моlim vas, pokušajte ponovo.',
     report: "Prijavi",
-    me: "Ja"
+    me: "Ja",
+    maxUserPoints: "Prijavili ste maksimalan broj, 3."
 }
 
 const en = {
@@ -31,6 +32,7 @@ const en = {
     notSure: 'Not sure',
     errorText: 'Something went wrong, please try again.',
     report: "Report",
-    me: "Me"
+    me: "Me",
+    maxUserPoints: "You have reported the max number, 3."
 }
 export const strings = en

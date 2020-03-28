@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 
 export const STORAGE_KEY = {
     UUID_APP: 'UUID_APP',
+    LOCATIONS_APP: 'LOCATIONS_APP'
 }
 
 export const saveStorageData = async (object, key) => {

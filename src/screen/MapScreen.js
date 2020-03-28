@@ -17,6 +17,8 @@ import {
     longitudeDeltaMarker,
     latitudeDeltaInitial,
     longitudeDeltaInitial,
+    saveStorageData,
+    maxUserPoints,
 } from '../helper'
 import BottomSheet from '../components/BottomSheet/BottomSheet'
 import MapView from '../components/MapView/MapView'
@@ -80,17 +82,26 @@ class MapScreen extends BaseScreen {
             }
         )
         const uuid = await getStorageData(STORAGE_KEY.UUID_APP)
+        const arrayStorage = await getStorageData(STORAGE_KEY.LOCATIONS_APP)
+        const userStoragePoints = arrayStorage !== null ? arrayStorage : []
         if (uuid !== null) {
+
             LocationNetwork.fetchGetPointsInsertByUser(uuid).then(
                 res => {
 
                     this.setNewStateHandler({
                         userPoints: [...res],
                     })
+                    saveStorageData(res, STORAGE_KEY.LOCATIONS_APP)
 
                 },
                 err => {
                     this.showAlertMessage(err)
+                    if (userStoragePoints.length > 0) {
+                        this.setNewStateHandler({
+                            userPoints: [...userStoragePoints],
+                        })
+                    }
                 }
             )
         }
@@ -154,24 +165,29 @@ class MapScreen extends BaseScreen {
         }, pauseTimeOutListener);
     }
     onPressLongMap = (e) => {
-        const { region } = this.state
+        const { region, userPoints } = this.state
         const zoom = getZoomRegion(region)
 
         if (zoom >= zoomMarker) {
             if (this.props.userLocation !== null) {
-                const radius = distanceLocation(this.props.userLocation.latitude, this.props.userLocation.longitude,
-                    e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude, 'K')
-                if (radius <= 10) {
-                    this.bottomSheet.getInnerRef().snapTo(0)
-                    const onPressPoint = e.nativeEvent.coordinate
-                    this.setNewStateHandler({
-                        onPressPoint
-                    })
+                if (userPoints.length < maxUserPoints) {
+                    const radius = distanceLocation(this.props.userLocation.latitude, this.props.userLocation.longitude,
+                        e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude, 'K')
+                    if (radius <= 10) {
+                        this.bottomSheet.getInnerRef().snapTo(0)
+                        const onPressPoint = e.nativeEvent.coordinate
+                        this.setNewStateHandler({
+                            onPressPoint
+                        })
+                    } else {
+                        showDefaultSnackBar(strings.inRadius)
+                        this.bottomSheet.getInnerRef().snapTo(1)
+                        this.bottomSheet.getInnerRef().snapTo(1)
+                    }
                 } else {
-                    showDefaultSnackBar(strings.inRadius)
-                    this.bottomSheet.getInnerRef().snapTo(1)
-                    this.bottomSheet.getInnerRef().snapTo(1)
+                    showDefaultSnackBar(strings.maxUserPoints)
                 }
+
             } else {
                 this.bottomSheet.getInnerRef().snapTo(1)
                 this.bottomSheet.getInnerRef().snapTo(1)
@@ -221,6 +237,7 @@ class MapScreen extends BaseScreen {
                 return index != position;
             });
             this.setNewStateHandler({ userPoints })
+            saveStorageData(userPoints, STORAGE_KEY.LOCATIONS_APP)
             this.apiCallDeletePoint(point)
         }
         this.showDialogMessage(strings.removeLocation, onPressOkStatus)

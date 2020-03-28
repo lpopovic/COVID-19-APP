@@ -1,5 +1,6 @@
 import { Dimensions } from 'react-native'
 export const displayScreen = Dimensions.get('window')
+export const maxUserPoints = 3
 export const heatMapGradient = {
     colorMapSize: 256,
     colors: ["#79BC6A", "#BBCF4C", "#EEC20B", "#F29305", "#E50000"],
