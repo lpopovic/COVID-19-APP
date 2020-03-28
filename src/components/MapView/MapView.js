@@ -14,6 +14,7 @@ import {
     isAndroid,
     heatMapGradient,
     BASE_COLOR,
+    strings,
 } from '../../helper'
 import {
     iconAssets,
@@ -105,7 +106,7 @@ class CustomMapView extends Component {
     }
     userLocationMarker = (coordinate) => {
         return (
-            <Marker coordinate={coordinate} title={'JA'}>
+            <Marker coordinate={coordinate} title={strings.me}>
                 <View style={styles.userMarkerBlue}>
                     <View style={styles.userMarkerWhite} />
                 </View>

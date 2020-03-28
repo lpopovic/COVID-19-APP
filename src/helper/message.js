@@ -12,7 +12,8 @@ const sr = {
     remove: 'Ukloni',
     notSure: 'Nisam siguran/na',
     errorText: 'Nešto nije u redu. Моlim vas, pokušajte ponovo.',
-    report: "Prijavi"
+    report: "Prijavi",
+    me: "Ja"
 }
 
 const en = {
@@ -29,6 +30,7 @@ const en = {
     remove: 'Remove',
     notSure: 'Not sure',
     errorText: 'Something went wrong, please try again.',
-    report: "Report"
+    report: "Report",
+    me: "Me"
 }
 export const strings = en
